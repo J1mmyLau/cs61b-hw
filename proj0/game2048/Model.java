@@ -109,23 +109,128 @@ public class Model extends Observable {
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
-
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
-
+        int offsetX=0, offsetY=0;
+        switch (side) {
+            case NORTH -> offsetX = +1;
+            case SOUTH -> offsetX = -1;
+            case EAST -> offsetY = +1;
+            case WEST -> offsetY = -1;
+        }
+        //tilt
+        boolean shifted = true;
+        while(shifted){
+            shifted = shift(board,side);
+            if(shifted) changed=true;
+        }
+        //merge
+        boolean merged = true;
+        while(merged){
+            merged = merge(board,side);
+            if(merged) changed = true;
+        }
+        shifted = true;
+        while(shifted){
+            shifted = shift(board,side);
+            if(shifted) changed=true;
+        }
         checkGameOver();
         if (changed) {
             setChanged();
         }
         return changed;
     }
-
+    public boolean shift(Board b,Side side){
+        int offsetX=0, offsetY=0;
+        switch (side) {
+            case NORTH -> offsetX = +1;
+            case SOUTH -> offsetX = -1;
+            case EAST -> offsetY = +1;
+            case WEST -> offsetY = -1;
+        }
+        boolean changed = false;
+        for(int row = 0; row < board.size(); row++) {
+            for(int col = 0; col < board.size(); col++) {
+                Tile tile = board.tile(col,row);
+                if(tile == null) continue;
+                int newRow = row;
+                int newCol = col;
+                while(true) {
+                    int nextRow = newRow + offsetX;
+                    int nextCol = newCol + offsetY;
+                    if(nextRow < 0 || nextRow >= board.size() || nextCol < 0 || nextCol >= board.size() || board.tile(nextCol,nextRow) != null) {
+                        break;
+                    }
+                    Tile nextTile = board.tile(nextCol,nextRow);
+                    if(nextTile == null) {
+                        board.move(nextCol,nextRow,tile);
+                        tile = board.tile(nextCol,nextRow);
+                        changed = true;
+                        newCol=nextCol;
+                        newRow=nextRow;
+                    }
+                }
+            }
+        }
+        if (changed) {
+            setChanged();
+        }
+        return changed;
+    }
+    public boolean merge(Board b,Side side){
+        boolean changed =false;
+        int offsetX=0, offsetY=0;
+        switch (side) {
+            case NORTH -> offsetX = +1;
+            case SOUTH -> offsetX = -1;
+            case EAST -> offsetY = +1;
+            case WEST -> offsetY = -1;
+        }
+        int defaultRow=0,defaultCol=0;
+        switch (side){
+            case NORTH -> defaultRow =0;
+            case SOUTH -> defaultRow = board.size()-1;
+            case EAST -> defaultCol = 0;
+            case WEST -> defaultCol = board.size()-1;
+        }
+        int offsetXX,offsetYY;
+        offsetYY = offsetY;
+        offsetXX = offsetX;
+        switch(side){
+            case WEST -> offsetXX = 1;
+            case EAST -> offsetXX = 1;
+            case SOUTH -> offsetYY = 1;
+            case NORTH -> offsetYY =1;
+        }
+        for(int row = defaultRow; row < board.size() && row>=0; row+=offsetXX) {
+            for(int col = defaultCol; col < board.size() && col>=0; col+=offsetYY) {
+                Tile tile = board.tile(col,row);
+                if(tile == null) continue;
+                int newRow = row + offsetX;
+                int newCol = col + offsetY;
+                if(newRow < 0 || newRow >= board.size() || newCol < 0 || newCol >= board.size()) continue;
+                Tile nextTile = board.tile(newCol,newRow);
+                if(nextTile == null) continue;
+                if(nextTile.value() == tile.value()) {
+                    board.move(newCol,newRow,tile);
+                    score += tile.value();
+                    changed = true;
+                }
+            }
+        }
+        if (changed) {
+            setChanged();
+        }
+        return changed;
+    }
     /** Checks if the game is over and sets the gameOver variable
      *  appropriately.
      */
     private void checkGameOver() {
         gameOver = checkGameOver(board);
+
     }
 
     /** Determine whether game is over. */
@@ -147,6 +252,7 @@ public class Model extends Observable {
         return false;
     }
 
+
     /**
      * Returns true if any tile is equal to the maximum valid value.
      * Maximum valid value is given by MAX_PIECE. Note that
@@ -156,6 +262,7 @@ public class Model extends Observable {
         // TODO: Fill in this function.
         for(int row = 0; row < b.size(); row++) {
             for(int col = 0; col < b.size(); col++) {
+                if(b.tile(col,row) == null) continue;
                 if (b.tile(col,row).value() == MAX_PIECE)
                     return true;
             }
@@ -182,6 +289,11 @@ public class Model extends Observable {
                     int newCol = col + dir[index][1];
                     if(newRow >= 0 && newRow < b.size() && newCol >= 0 && newCol < b.size()) {
                         if(b.tile(newRow,newCol).value() == b.tile(col,row).value()) {
+                            System.out.print(newRow);
+                            System.out.print(newCol);
+                            System.out.print(row);
+                            System.out.print(col);
+                            System.out.print("\n");
                             return true;
                         }
                     }
