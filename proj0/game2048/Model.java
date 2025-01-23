@@ -190,14 +190,14 @@ public class Model extends Observable {
         }
         int defaultRow=0,defaultCol=0;
         switch (side){
-            case NORTH -> defaultRow =0;
-            case SOUTH -> defaultRow = board.size()-1;
-            case EAST -> defaultCol = 0;
-            case WEST -> defaultCol = board.size()-1;
+            case SOUTH -> defaultRow =0;
+            case NORTH -> defaultRow = board.size()-1;
+            case WEST -> defaultCol = 0;
+            case EAST -> defaultCol = board.size()-1;
         }
         int offsetXX,offsetYY;
-        offsetYY = offsetY;
-        offsetXX = offsetX;
+        offsetYY = -offsetY;
+        offsetXX = -offsetX;
         switch(side){
             case WEST -> offsetXX = 1;
             case EAST -> offsetXX = 1;
