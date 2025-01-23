@@ -126,11 +126,7 @@ public class Model extends Observable {
             if(shifted) changed=true;
         }
         //merge
-        boolean merged = true;
-        while(merged){
-            merged = merge(board,side);
-            if(merged) changed = true;
-        }
+        if(merge(board, side)) changed =true;
         shifted = true;
         while(shifted){
             shifted = shift(board,side);
@@ -181,6 +177,7 @@ public class Model extends Observable {
     }
     public boolean merge(Board b,Side side){
         boolean changed =false;
+        boolean[][] ismerged={{false,false,false,false},{false,false,false,false},{false,false,false,false},{false,false,false,false}};
         int offsetX=0, offsetY=0;
         switch (side) {
             case NORTH -> offsetX = +1;
@@ -207,13 +204,14 @@ public class Model extends Observable {
         for(int row = defaultRow; row < board.size() && row>=0; row+=offsetXX) {
             for(int col = defaultCol; col < board.size() && col>=0; col+=offsetYY) {
                 Tile tile = board.tile(col,row);
-                if(tile == null) continue;
+                if(tile == null || ismerged[col][row]) continue;
                 int newRow = row + offsetX;
                 int newCol = col + offsetY;
                 if(newRow < 0 || newRow >= board.size() || newCol < 0 || newCol >= board.size()) continue;
                 Tile nextTile = board.tile(newCol,newRow);
                 if(nextTile == null) continue;
-                if(nextTile.value() == tile.value()) {
+                if(nextTile.value() == tile.value() && !ismerged[newCol][newRow]) {
+                    ismerged[newCol][newRow] = true;
                     board.move(newCol,newRow,tile);
                     score += tile.value()*2;
                     changed = true;
