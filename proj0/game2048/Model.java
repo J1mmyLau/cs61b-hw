@@ -215,7 +215,7 @@ public class Model extends Observable {
                 if(nextTile == null) continue;
                 if(nextTile.value() == tile.value()) {
                     board.move(newCol,newRow,tile);
-                    score += tile.value();
+                    score += tile.value()*2;
                     changed = true;
                 }
             }
