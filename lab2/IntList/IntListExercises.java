@@ -1,7 +1,11 @@
 package IntList;
 
 public class IntListExercises {
-
+    public static void main(String[] args){
+        IntList L = IntList.of(1, 22, 15);
+        IntListExercises.setToZeroIfMaxFEL(L);
+        System.out.println(L.toString());
+    }
     /**
      * Part A: (Buggy) mutative method that adds a constant C to each
      * element of an IntList
@@ -10,7 +14,7 @@ public class IntListExercises {
      */
     public static void addConstant(IntList lst, int c) {
         IntList head = lst;
-        while (head.rest != null) {
+        while (head!=null) {
             head.first += c;
             head = head.rest;
         }
@@ -51,7 +55,7 @@ public class IntListExercises {
      */
     public static boolean firstDigitEqualsLastDigit(int x) {
         int lastDigit = x % 10;
-        while (x > 10) {
+        while (x >= 10) {
             x = x / 10;
         }
         int firstDigit = x % 10;
