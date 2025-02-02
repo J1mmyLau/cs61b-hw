@@ -38,7 +38,7 @@ public class TimeSLList {
             double timeInSeconds = sw.elapsedTime();
             Ns.addLast(i);
             times.addLast(timeInSeconds);
-            opCounts.addLast(i);
+            opCounts.addLast(10000);
         }
         printTimingTable(Ns, times, opCounts);
     }
