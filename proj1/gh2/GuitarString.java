@@ -16,7 +16,7 @@ public class GuitarString {
     /* Buffer for storing sound data. */
     // TODO: uncomment the following line once you're ready to start this portion
      private Deque<Double> buffer;
-
+     private int capacity;
     /* Create a guitar string of the given frequency.  */
     public GuitarString(double frequency) {
         // TODO: Create a buffer with capacity = SR / frequency. You'll need to
@@ -24,7 +24,7 @@ public class GuitarString {
         //       better accuracy, use the Math.round() function before casting.
         //       Your should initially fill your buffer array with zeros.
         buffer = new ArrayDeque<>();
-        int capacity = (int) Math.round(SR / frequency);
+        capacity = (int) Math.round(SR / frequency);
         for (int i = 0; i < capacity; i++) {
             buffer.addLast(0.0);
         }
@@ -45,7 +45,7 @@ public class GuitarString {
         while(buffer.size() > 0) {
             buffer.removeFirst();
         }
-        while(buffer.size() < ((ArrayDeque<Double>) buffer).capacity()) {
+        while(buffer.size() < capacity) {
             buffer.addLast(Math.random() - 0.5);
         }
     }
