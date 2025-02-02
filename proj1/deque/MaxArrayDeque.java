@@ -1,3 +1,4 @@
+
 package deque;
 
 import java.util.Comparator;
@@ -14,14 +15,14 @@ public class MaxArrayDeque<T> extends ArrayDeque<T> {
         return max(this.comparator);
     }
 
-    public T max(Comparator<T> comparator) {
+    public T max(Comparator<T> cmp) {
         if (this.size() == 0) {
             return null;
         }
         T max = get(0);
         for (int i = 1; i < size(); i++) {
             T currentItem = get(i);
-            if (comparator.compare(currentItem, max) > 0) {
+            if (cmp.compare(currentItem, max) > 0) {
                 max = currentItem;
             }
         }
