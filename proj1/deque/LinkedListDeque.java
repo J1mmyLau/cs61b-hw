@@ -80,7 +80,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         sentinel.prev = newNode;
         size += 1;
     }
-    private boolean isEmpty() {
+    public boolean isEmpty() {
         return size == 0;
     }
 
