@@ -2,80 +2,110 @@ package timingtest;
 
 /** An SLList is a list of integers, which hides the terrible truth
  * of the nakedness within. */
-public class SLList<Item> {
-	private class IntNode {
-		public Item item;
-		public IntNode next;
+public class SLList<T> {
+	private class Node {
+		public T item;
+		public Node prev;
+		public Node next;
 
-		public IntNode(Item i, IntNode n) {
+		public Node(T i, Node p, Node n) {
 			item = i;
+			prev = p;
 			next = n;
 		}
 	}
 
-	/* The first item (if it exists) is at sentinel.next. */
-	private IntNode sentinel;
+	private Node sentinel;
 	private int size;
 
-	/** Creates an empty timingtest.SLList. */
 	public SLList() {
-		sentinel = new IntNode(null, null);
+		sentinel = new Node(null, null, null);
+		sentinel.prev = sentinel;
+		sentinel.next = sentinel;
 		size = 0;
 	}
 
-	public SLList(Item x) {
-		sentinel = new IntNode(null, null);
-		sentinel.next = new IntNode(x, null);
-		size = 1;
+
+
+	public void addFirst(T item) {
+		Node newNode = new Node(item, sentinel, sentinel.next);
+		sentinel.next.prev = newNode;
+		sentinel.next = newNode;
+		size += 1;
 	}
 
-	/** Adds x to the front of the list. */
-	public void addFirst(Item x) {
-		sentinel.next = new IntNode(x, sentinel.next);
-		size = size + 1;
+	public void addLast(T item) {
+		Node newNode = new Node(item, sentinel.prev, sentinel);
+		sentinel.prev.next = newNode;
+		sentinel.prev = newNode;
+		size += 1;
 	}
 
-	/** Returns the first item in the list. */
-	public Item getFirst() {
-		return sentinel.next.item;
+	public boolean isEmpty() {
+		return size == 0;
 	}
 
-	/** Adds x to the end of the list. */
-	public void addLast(Item x) {
-		size = size + 1;
-
-		IntNode p = sentinel;
-
-		/* Advance p to the end of the list. */
-		while (p.next != null) {
-			p = p.next;
-		}
-
-		p.next = new IntNode(x, null);
-	}
-
-	/** returns last item in the list */
-	public Item getLast() {
-		IntNode p = sentinel;
-
-		/* Advance p to the end of the list. */
-		while (p.next != null) {
-			p = p.next;
-		}
-
-		return p.item;
-	}
-
-
-	/** Returns the size of the list. */
 	public int size() {
 		return size;
 	}
 
-	public static void main(String[] args) {
-		/* Creates a list of one integer, namely 10 */
-		SLList L = new SLList();
-		L.addLast(20);
-		System.out.println(L.size());
+	public void printDeque() {
+		Node p = sentinel.next;
+		while (p != sentinel) {
+			System.out.print(p.item + " ");
+			p = p.next;
+		}
+		System.out.println();
 	}
+	public T getLast() {
+		if (isEmpty()) {
+			return null;
+		}
+		return sentinel.prev.item;
+	}
+	public T removeFirst() {
+		if (isEmpty()) {
+			return null;
+		}
+		Node firstNode = sentinel.next;
+		sentinel.next = firstNode.next;
+		firstNode.next.prev = sentinel;
+		size -= 1;
+		return firstNode.item;
+	}
+
+	public T removeLast() {
+		if (isEmpty()) {
+			return null;
+		}
+		Node lastNode = sentinel.prev;
+		sentinel.prev = lastNode.prev;
+		lastNode.prev.next = sentinel;
+		size -= 1;
+		return lastNode.item;
+	}
+
+	public T get(int index) {
+		if (index >= size) {
+			return null;
+		}
+		Node p = sentinel.next;
+		while (index > 0) {
+			p = p.next;
+			index -= 1;
+		}
+		return p.item;
+	}
+
+	public T getRecursive(int index) {
+		return getRecursiveHelper(sentinel.next, index);
+	}
+
+	private T getRecursiveHelper(Node p, int index) {
+		if (index == 0) {
+			return p.item;
+		}
+		return getRecursiveHelper(p.next, index - 1);
+	}
+
 }
