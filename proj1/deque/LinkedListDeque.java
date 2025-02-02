@@ -45,28 +45,24 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     }
 
     public boolean equals(Object o) {
-        if (o == null) {
+        if (o == null || !(o instanceof Deque)) {
             return false;
         }
-        if (o.getClass() != this.getClass()) {
+        Deque<T> other = (Deque<T>) o;
+        if (size() != other.size()) {
             return false;
         }
-        LinkedListDeque<T> other = (LinkedListDeque<T>) o;
-        if (other.size() != this.size()) {
-            return false;
-        }
-        Node p = sentinel.next;
-        Node q = other.sentinel.next;
-        while (p != sentinel) {
-            if (!p.item.equals(q.item)) {
+        Iterator<T> otherIterator = other.iterator();
+        for (T item : this) {
+            if (!otherIterator.hasNext()) {
                 return false;
             }
-            p = p.next;
-            q = q.next;
+            if (!item.equals(otherIterator.next())) {
+                return false;
+            }
         }
         return true;
     }
-
     public void addFirst(T item) {
         Node newNode = new Node(item, sentinel, sentinel.next);
         sentinel.next.prev = newNode;
@@ -79,9 +75,6 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         sentinel.prev.next = newNode;
         sentinel.prev = newNode;
         size += 1;
-    }
-    public boolean isEmpty() {
-        return size == 0;
     }
 
     public int size() {

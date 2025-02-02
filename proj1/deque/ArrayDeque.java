@@ -35,18 +35,19 @@ public class ArrayDeque<T> implements Deque<T>,Iterable<T> {
     }
 
     public boolean equals(Object o) {
-        if (o == null) {
+        if (o == null || !(o instanceof Deque)) {
             return false;
         }
-        if (o.getClass() != this.getClass()) {
+        Deque<T> other = (Deque<T>) o;
+        if (size() != other.size()) {
             return false;
         }
-        ArrayDeque<T> other = (ArrayDeque<T>) o;
-        if (other.size() != this.size()) {
-            return false;
-        }
-        for (int i = 0; i < size; i++) {
-            if (!other.get(i).equals(this.get(i))) {
+        Iterator<T> otherIterator = other.iterator();
+        for (T item : this) {
+            if (!otherIterator.hasNext()) {
+                return false;
+            }
+            if (!item.equals(otherIterator.next())) {
                 return false;
             }
         }
@@ -94,10 +95,6 @@ public class ArrayDeque<T> implements Deque<T>,Iterable<T> {
         items[nextLast] = item;
         nextLast = plusOne(nextLast);
         size += 1;
-    }
-
-    public boolean isEmpty() {
-        return size == 0;
     }
 
     public int size() {
