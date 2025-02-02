@@ -19,7 +19,12 @@ public class SLList<T> {
 	private int size;
 
 	public SLList() {
-		sentinel = new Node(null, null, null);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        sentinel = new Node(null, null, null);
 		sentinel.prev = sentinel;
 		sentinel.next = sentinel;
 		size = 0;
