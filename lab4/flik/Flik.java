@@ -7,6 +7,7 @@ import java.util.Objects;
  *
  * @author Josh Hug
  */
+
 public class Flik {
     /**
      * @param a Value 1
