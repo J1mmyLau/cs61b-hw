@@ -41,7 +41,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         if (o.getClass() != this.getClass() || o.getClass() != LinkedListDeque.class) {
             return false;
         }
-        if(o.getClass() == LinkedListDeque.class){
+        if (o.getClass() == LinkedListDeque.class) {
             LinkedListDeque<T> other = (LinkedListDeque<T>) o;
             if (other.size() != this.size()) {
                 return false;
@@ -54,8 +54,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
                 }
             }
             return true;
-        }
-        else if(o.getClass() == ArrayDeque.class){
+        } else if (o.getClass() == ArrayDeque.class) {
             ArrayDeque<T> other = (ArrayDeque<T>) o;
             if (other.size() != this.size()) {
                 return false;
