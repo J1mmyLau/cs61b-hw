@@ -37,4 +37,5 @@ public interface Deque<T> extends Iterable<T> {
     default Iterator<T> iterator() {
         return new DequeIterator<>(this);
     }
+
 }

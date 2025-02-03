@@ -18,7 +18,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     }
 
     public boolean equals(Object o) {
-        if (!(o instanceof Deque)) {
+        if (!(o instanceof ArrayDeque) || !(o instanceof LinkedListDeque)) {
             return false;
         }
         Deque<T> other = (Deque<T>) o;
