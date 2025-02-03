@@ -44,44 +44,29 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         size = 0;
     }
 
+    @Override
     public boolean equals(Object o) {
-        if (o == null) {
-            return false;
-        }
-        if (this == o) {
-            return true;
-        }
-        if (o.getClass() != this.getClass() && o.getClass() != LinkedListDeque.class) {
-            return false;
-        }
-        if (o.getClass() == LinkedListDeque.class) {
-            LinkedListDeque<T> other = (LinkedListDeque<T>) o;
-            if (other.size() != this.size()) {
-                return false;
-            }
-            Iterator<T> otherIterator = other.iterator();
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass() && !(o instanceof ArrayDeque)) return false;
+
+        if (o instanceof ArrayDeque) {
+            ArrayDeque<?> other = (ArrayDeque<?>) o;
+            if (other.size() != this.size()) return false;
+            Iterator<?> otherIterator = other.iterator();
             Iterator<T> thisIterator = this.iterator();
-            while (otherIterator.hasNext()) {
-                if (!otherIterator.next().equals(thisIterator.next())) {
-                    return false;
-                }
+            while (thisIterator.hasNext()) {
+                if (!thisIterator.next().equals(otherIterator.next())) return false;
             }
-            return true;
-        } else if (o.getClass() == ArrayDeque.class) {
-            ArrayDeque<T> other = (ArrayDeque<T>) o;
-            if (other.size() != this.size()) {
-                return false;
-            }
-            Iterator<T> otherIterator = other.iterator();
+        } else {
+            LinkedListDeque<?> other = (LinkedListDeque<?>) o;
+            if (other.size() != this.size()) return false;
+            Iterator<?> otherIterator = other.iterator();
             Iterator<T> thisIterator = this.iterator();
-            while (otherIterator.hasNext()) {
-                if (!otherIterator.next().equals(thisIterator.next())) {
-                    return false;
-                }
+            while (thisIterator.hasNext()) {
+                if (!thisIterator.next().equals(otherIterator.next())) return false;
             }
-            return true;
         }
-        return false;
+        return true;
     }
 
     public void addFirst(T item) {

@@ -20,4 +20,17 @@ public class TestEqual {
 
         assertEquals(ad1, ad2);
     }
+
+    @Test
+    public void deepEqualTest() {
+        //very long deque
+        ArrayDeque<Integer> ad1 = new ArrayDeque<Integer>();
+        LinkedListDeque<Integer> ad2 = new LinkedListDeque<Integer>();
+        for (int i = 0; i < 1000; i++) {
+            ad1.addLast(i);
+            ad2.addLast(i);
+        }
+        assertEquals(ad1, ad2);
+
+    }
 }
