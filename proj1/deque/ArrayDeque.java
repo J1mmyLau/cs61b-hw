@@ -21,11 +21,11 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         if (!(o instanceof ArrayDeque) || !(o instanceof LinkedListDeque)) {
             return false;
         }
-        Deque<T> other = (Deque<T>) o;
+        Deque other = (Deque) o;
         if (size() != other.size()) {
             return false;
         }
-        Iterator<T> otherIterator = other.iterator();
+        Iterator otherIterator = other.iterator();
         for (T item : this) {
             if (!otherIterator.hasNext()) {
                 return false;
