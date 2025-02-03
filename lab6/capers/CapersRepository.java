@@ -18,8 +18,6 @@ public class CapersRepository {
     static final File CWD = new File(System.getProperty("user.dir"));
 
     /** Main metadata folder. */
-    static final File CAPERS_FOLDER = null; // TODO Hint: look at the `join`
-                                            //      function in Utils
 
     /**
      * Does required filesystem operations to allow for persistence.
@@ -31,7 +29,21 @@ public class CapersRepository {
      *    - story -- file containing the current story
      */
     public static void setupPersistence() {
-        // TODO
+
+        File capersFolder = Utils.join(CWD, ".capers");
+        if (!capersFolder.exists()) {
+            capersFolder.mkdir();
+        }
+
+        File StoryContent = Utils.join(capersFolder, "story");
+        if (!StoryContent.exists()) {
+            Utils.writeContents(StoryContent, "");
+        }
+        File DogFolder = Utils.join(capersFolder, "dogs");
+        if (!DogFolder.exists()) {
+            DogFolder.mkdir();
+        }
+
     }
 
     /**
@@ -40,7 +52,11 @@ public class CapersRepository {
      * @param text String of the text to be appended to the story
      */
     public static void writeStory(String text) {
-        // TODO
+        File capersFolder = Utils.join(CWD, ".capers");
+        File StoryContent = Utils.join(capersFolder, "story");
+        String story = Utils.readContentsAsString(StoryContent);
+        Utils.writeContents(StoryContent, story + text + "\n");
+        System.out.println(Utils.readContentsAsString(StoryContent));
     }
 
     /**
@@ -49,7 +65,9 @@ public class CapersRepository {
      * Also prints out the dog's information using toString().
      */
     public static void makeDog(String name, String breed, int age) {
-        // TODO
+        Dog dog = new Dog(name, breed, age);
+        dog.saveDog();
+        System.out.println(dog.toString());
     }
 
     /**
@@ -59,6 +77,12 @@ public class CapersRepository {
      * @param name String name of the Dog whose birthday we're celebrating.
      */
     public static void celebrateBirthday(String name) {
-        // TODO
+        File CWD = new File(System.getProperty("user.dir"));
+        File capersFolder = Utils.join(CWD, ".capers");
+        File DogFolder = Utils.join(capersFolder, "dogs");
+        File dogFile = Utils.join(DogFolder, name);
+        Dog dog = readObject(dogFile, Dog.class);
+        dog.haveBirthday();
+        dog.saveDog();
     }
 }
