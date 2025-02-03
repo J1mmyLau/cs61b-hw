@@ -13,11 +13,11 @@ public interface Deque<T> extends Iterable<T> {
     default boolean isEmpty(){
         return size() == 0;
     }
-    public class DequeIteraor<T> implements Iterator<T> {
+    class DequeIterator<T> implements Iterator<T> {
         private int index;
         private Deque<T> deque;
 
-        public DequeIteraor(Deque<T> deque) {
+        public DequeIterator(Deque<T> deque) {
             this.deque = deque;
             index = 0;
         }
@@ -35,6 +35,6 @@ public interface Deque<T> extends Iterable<T> {
         }
     }
     default Iterator<T> iterator() {
-        return new DequeIteraor<T>(this);
+        return new DequeIterator<>(this);
     }
 }
