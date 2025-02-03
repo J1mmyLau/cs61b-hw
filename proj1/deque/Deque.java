@@ -11,4 +11,7 @@ public interface Deque<T> {
     T removeLast();
     T get(int index);
     Iterator<T> iterator();
+    default public boolean isEmpty() {
+        return size() == 0;
+    }
 }

@@ -11,7 +11,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     private class ArrayDequeIterator implements Iterator<T> {
         private int index;
-        public ArrayDequeIterator() {
+        ArrayDequeIterator() {
             index = 0;
         }
         public boolean hasNext() {
@@ -38,7 +38,10 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         if (o == null) {
             return false;
         }
-        if (o.getClass() != this.getClass() || o.getClass() != LinkedListDeque.class) {
+        if (this == o) {
+            return true;
+        }
+        if (o.getClass() != this.getClass() && o.getClass() != LinkedListDeque.class) {
             return false;
         }
         if (o.getClass() == LinkedListDeque.class) {
@@ -112,10 +115,6 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         items[nextLast] = item;
         nextLast = plusOne(nextLast);
         size += 1;
-    }
-
-    public boolean isEmpty() {
-        return size == 0;
     }
 
     public int size() {
