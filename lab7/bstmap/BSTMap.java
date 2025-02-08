@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-public class BSTMap<K,V> implements Map61B<K,V>{
+public class BSTMap<K extends Comparable<K>,V> implements Map61B<K,V>{
     @Override
     public Iterator<K> iterator() {
         throw new UnsupportedOperationException();
@@ -36,12 +36,24 @@ public class BSTMap<K,V> implements Map61B<K,V>{
         size = 0;
     }
 
+    public void printInOrder() {
+        printInOrder(root);
+    }
+
+    private void printInOrder(Node n) {
+        if (n == null) {
+            return;
+        }
+        printInOrder(n.left);
+        System.out.println(n.key + " : " + n.value);
+        printInOrder(n.right);
+    }
 
     public boolean containsKey(K key) {
         return containsKey(root, key);
     }
 
-    public boolean containsKey(Node n, K key) {
+    private boolean containsKey(Node n, K key) {
         if(n == null) {
             return false;
         }
