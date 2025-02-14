@@ -65,7 +65,8 @@ public class Repository {
 
     public void init(){
         if(GITLET_DIR.exists()){
-            throw new GitletException.AlreadyInitialized();
+            System.out.println("A Gitlet version-control system already exists in the current directory.");
+            return;
         }
         GITLET_DIR.mkdir();
         new File(GITLET_DIR, "commits").mkdir();
@@ -86,7 +87,8 @@ public class Repository {
         File file = new File(fileName);
         stagedFiles.add(fileName);
         if (!file.exists()) {
-            throw new GitletException.FileNotExists();
+            System.out.println("File does not exist.");
+            return;
         }
         File stagingArea = join(GITLET_DIR, "staging", fileName);
         if(stagingArea.exists()){
@@ -97,11 +99,13 @@ public class Repository {
 
     public void commit(String message) {
         if(message.equals("")){
-            throw new GitletException.NoMessage();
+            System.out.println("Please enter a commit message.");
+            return;
         }
         File stagingArea = join(GITLET_DIR, "staging");
         if (plainFilenamesIn(stagingArea).isEmpty()) {
-            throw new GitletException.NoChanges();
+            System.out.println("No changes added to the commit.");
+            return;
         }
         String parentID = readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class);
         Commit parent = readObject(join(GITLET_DIR, "commits", parentID), Commit.class);
@@ -140,7 +144,8 @@ public class Repository {
             stagingArea.delete();
             return;
         }
-        throw new GitletException.NoReasontoRemove();
+        System.out.println("No reason to remove the file.");
+        return;
     }
 
     public void log(){
@@ -202,7 +207,8 @@ public class Repository {
             }
         }
         if (!found) {
-            throw new GitletException.MessageNotFound();
+            System.out.println("Found no commit with that message.");
+            return;
         }
     }
 
@@ -275,10 +281,12 @@ public class Repository {
 
     public void checkoutBranch(String branch) {
         if (!plainFilenamesIn(join(GITLET_DIR, "refs/heads")).contains(branch)) {
-            throw new GitletException.BranchNotFound();
+            System.out.println("No such branch exists.");
+            return;
         }
         if (branch.equals(readContentsAsString(join(GITLET_DIR, "branch"))) ) {
-            throw new GitletException.NoNeedToCheckout();
+            System.out.println("No need to checkout the current branch.");
+            return;
         }
         Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + branch), String.class)), Commit.class);
         for(String fileName : plainFilenamesIn(CWD)){
@@ -295,7 +303,8 @@ public class Repository {
         String branch = readContentsAsString(join(GITLET_DIR, "branch"));
         Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + branch), String.class)), Commit.class);
         if (!currentCommit.getFiles().contains(fileName)) {
-            throw new GitletException.FileNotInCommit();
+            System.out.println("File does not exist in that commit.");
+            return;
         }
         String blobID = currentCommit.getBlob(fileName);
         writeContents(join(CWD, fileName), readObject(join(GITLET_DIR, "blobs", blobID), String.class));
@@ -308,7 +317,8 @@ public class Repository {
             if (commit.contains(commitID)) {
                 Commit currentCommit = readObject(join(GITLET_DIR, "commits", commit), Commit.class);
                 if (!currentCommit.getFiles().contains(fileName)) {
-                    throw new GitletException.FileNotInCommit();
+                    System.out.println("File does not exist in that commit.");
+                    return;
                 }
                 String blobID = currentCommit.getBlob(fileName);
                 writeContents(join(CWD, fileName), readObject(join(GITLET_DIR, "blobs", blobID), String.class));
@@ -316,7 +326,8 @@ public class Repository {
             }
         }
         if (!found) {
-            throw new GitletException.CommitNotFound();
+            System.out.println("No commit with that id exists.");
+            return;
         }
     }
 
@@ -327,10 +338,11 @@ public class Repository {
 
     public void removeBranch(String arg) {
         if (!plainFilenamesIn(join(GITLET_DIR, "refs/heads")).contains(arg)) {
-            throw new GitletException.NoBranch();
+            System.out.println("A branch with that name does not exist.");
+            return;
         }
         if (arg.equals(readContentsAsString(join(GITLET_DIR, "branch"))) ) {
-            throw new GitletException.NoNeedToCheckout();
+            System.out.println("Cannot remove the current branch.");
         }
         join(GITLET_DIR, "refs/heads", arg).delete();
     }
@@ -353,7 +365,8 @@ public class Repository {
             }
         }
         if (!found) {
-            throw new GitletException.CommitNotFound();
+            System.out.println("No commit with that id exists.");
+            return;
         }
     }
     private Commit findSplitPoint(Commit currentCommit, Commit givenCommit) {
@@ -378,10 +391,12 @@ public class Repository {
     //TODO: deal with the multi branch case later
     public void merge(String branch) {
         if (!plainFilenamesIn(join(GITLET_DIR, "refs/heads")).contains(branch)) {
-            throw new GitletException.BranchNotFound();
+            System.out.println("A branch with that name does not exist.");
+            return;
         }
         if (branch.equals(readContentsAsString(join(GITLET_DIR, "branch"))) ) {
-            throw new GitletException.NoNeedToMerge();
+            System.out.println("Cannot merge a branch with itself.");
+            return;
         }
         Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
         Commit givenCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + branch), String.class)), Commit.class);
