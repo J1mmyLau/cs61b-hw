@@ -90,11 +90,15 @@ public class Repository {
             System.out.println("File does not exist.");
             return;
         }
-        File stagingArea = join(GITLET_DIR, "staging", fileName);
-        if(stagingArea.exists()){
-            stagingArea.delete();
+        Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/master"), String.class)), Commit.class);
+        if (currentCommit.getFiles().contains(fileName)) {
+            if (currentCommit.getBlob(fileName).equals(sha1(readContentsAsString(file)))) {
+                return;
+            }
         }
+        File stagingArea = join(GITLET_DIR, "staging", fileName);
         writeContents(stagingArea, readContentsAsString(file));
+
     }
 
     public void commit(String message) {
@@ -332,8 +336,11 @@ public class Repository {
     }
 
     public void branch(String arg) {
-        new File(GITLET_DIR, "refs/heads/" + arg).mkdir();
-        writeObject(join(GITLET_DIR, "refs/heads/" + arg), readObject(join(GITLET_DIR, "refs/heads/master"), String.class));
+        if(plainFilenamesIn(join(GITLET_DIR, "refs/heads")).contains(arg)){
+            System.out.println("A branch with that name already exists.");
+            return;
+        }
+        writeObject(join(GITLET_DIR, "refs/heads/" + arg), readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class));
     }
 
     public void removeBranch(String arg) {

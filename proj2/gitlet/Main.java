@@ -78,7 +78,7 @@ public class Main {
             }
 
             default: {
-                throw new GitletException.InvalidCommands();
+                System.out.println("No command with that name exists.");
             }
             // TODO: FILL THE REST IN
         }
