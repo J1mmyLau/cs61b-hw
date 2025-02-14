@@ -37,10 +37,12 @@ public class Repository {
     public static final File GITLET_DIR = join(CWD, ".gitlet");
     private List<String> removedFiles;
     private List<String> stagedFiles;
+    private String currentBranch;
 
     public Repository() {
         new File(GITLET_DIR, "removing").mkdir();
         new File(GITLET_DIR, "staging").mkdir();
+        currentBranch = readContentsAsString(join(GITLET_DIR, "branch"));
         removedFiles = new ArrayList<String>();
         if(plainFilenamesIn(join(GITLET_DIR, "removing")) != null){
             for(String file : plainFilenamesIn(join(GITLET_DIR, "removing"))){
@@ -96,7 +98,7 @@ public class Repository {
         if (plainFilenamesIn(stagingArea).isEmpty()) {
             throw new GitletException.NoChanges();
         }
-        String parentID = readObject(join(GITLET_DIR, "refs/heads/master"), String.class);
+        String parentID = readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class);
         Commit parent = readObject(join(GITLET_DIR, "commits", parentID), Commit.class);
         Set<String> files = new HashSet<String>();
         for(String file : parent.getFiles()){
@@ -274,6 +276,10 @@ public class Repository {
             throw new GitletException.NoNeedToCheckout();
         }
         Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + branch), String.class)), Commit.class);
+        for(String fileName : plainFilenamesIn(CWD)){
+            File file = join(CWD, fileName);
+            file.delete();
+        }
         for (String fileName : currentCommit.getFiles()) {
             checkoutFile(fileName);
         }
@@ -312,5 +318,121 @@ public class Repository {
     public void branch(String arg) {
         new File(GITLET_DIR, "refs/heads/" + arg).mkdir();
         writeObject(join(GITLET_DIR, "refs/heads/" + arg), readObject(join(GITLET_DIR, "refs/heads/master"), String.class));
+    }
+
+    public void removeBranch(String arg) {
+        if (!plainFilenamesIn(join(GITLET_DIR, "refs/heads")).contains(arg)) {
+            throw new GitletException.NoBranch();
+        }
+        if (arg.equals(readContentsAsString(join(GITLET_DIR, "branch"))) ) {
+            throw new GitletException.NoNeedToCheckout();
+        }
+        join(GITLET_DIR, "refs/heads", arg).delete();
+    }
+
+    public void reset(String commitID) {
+        commitID = commitID.substring(0, 4);
+        boolean found = false;
+        for (String commit : plainFilenamesIn(join(GITLET_DIR, "commits"))) {
+            if (commit.contains(commitID)) {
+                Commit currentCommit = readObject(join(GITLET_DIR, "commits", commit), Commit.class);
+                for(String fileName : plainFilenamesIn(CWD)){
+                    File file = join(CWD, fileName);
+                    file.delete();
+                }
+                for (String fileName : currentCommit.getFiles()) {
+                    checkoutFile(fileName);
+                }
+                writeObject(join(GITLET_DIR, "refs/heads/" + currentBranch), commit);
+                found = true;
+            }
+        }
+        if (!found) {
+            throw new GitletException.CommitNotFound();
+        }
+    }
+    private Commit findSplitPoint(Commit currentCommit, Commit givenCommit) {
+        Commit splitPoint = null;
+        while (currentCommit != null) {
+            Commit temp = givenCommit;
+            while (temp != null) {
+                if (currentCommit.getCommitID().equals(temp.getCommitID())) {
+                    splitPoint = currentCommit;
+                    return splitPoint;
+                }
+                temp = readObject(join(GITLET_DIR, "commits", temp.getParentID()), Commit.class);
+            }
+            currentCommit = readObject(join(GITLET_DIR, "commits", currentCommit.getParentID()), Commit.class);
+        }
+        return splitPoint;
+    }
+
+    private void mergeConflict(){
+
+    }
+    //TODO: deal with the multi branch case later
+    public void merge(String branch) {
+        if (!plainFilenamesIn(join(GITLET_DIR, "refs/heads")).contains(branch)) {
+            throw new GitletException.BranchNotFound();
+        }
+        if (branch.equals(readContentsAsString(join(GITLET_DIR, "branch"))) ) {
+            throw new GitletException.NoNeedToMerge();
+        }
+        Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
+        Commit givenCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + branch), String.class)), Commit.class);
+        Commit splitPoint = findSplitPoint(currentCommit, givenCommit);
+        if (splitPoint.getCommitID().equals(givenCommit.getCommitID())) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            return;
+        }
+        if (splitPoint.getCommitID().equals(currentCommit.getCommitID())) {
+            writeObject(join(GITLET_DIR, "refs/heads/" + currentBranch), givenCommit.getCommitID());
+            System.out.println("Current branch fast-forwarded.");
+            return;
+        }
+        for (String fileName : givenCommit.getFiles()) {
+            if (!currentCommit.getFiles().contains(fileName)) {
+                if (plainFilenamesIn(CWD).contains(fileName)) {
+                    System.out.println("There is an untracked file in the way; delete it or add it first.");
+                    return;
+                }
+            }
+        }
+
+        for (String fileName : givenCommit.getFiles()) {
+            if (!currentCommit.getFiles().contains(fileName)) {
+                checkoutCommit(givenCommit.getCommitID(), fileName);
+                add(fileName);
+            }
+            else {
+                if (currentCommit.getBlob(fileName).equals(givenCommit.getBlob(fileName))) {
+                    if (plainFilenamesIn(join(GITLET_DIR, "staging")).contains(fileName)) {
+                        stagedFiles.remove(fileName);
+                        join(GITLET_DIR, "staging", fileName).delete();
+                    }
+                }
+                else {
+                    if (plainFilenamesIn(CWD).contains(fileName)) {
+                        mergeConflict();
+                        return;
+                    }
+                    checkoutCommit(givenCommit.getCommitID(), fileName);
+                    add(fileName);
+                }
+            }
+        }
+        for (String fileName : currentCommit.getFiles()) {
+            if (!givenCommit.getFiles().contains(fileName)) {
+                if (plainFilenamesIn(CWD).contains(fileName)) {
+                    System.out.println("There is an untracked file in the way; delete it or add it first.");
+                    return;
+                }
+            }
+        }
+        String message = "Merged " + currentBranch + " with " + branch + ".";
+        Commit newCommit = new Commit(message, currentCommit.getCommitID(), new HashSet<String>(), true, currentBranch);
+        newCommit.writeBlob();
+        writeObject(join(GITLET_DIR, "commits", newCommit.getCommitID()), newCommit);
+        writeObject(join(GITLET_DIR, "refs/heads/" + currentBranch), newCommit.getCommitID());
     }
 }

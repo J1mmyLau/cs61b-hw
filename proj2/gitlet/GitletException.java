@@ -100,9 +100,16 @@ class GitletException extends RuntimeException {
             super("No need to checkout the current branch.");
         }
     }
+
      static class BranchNotFound extends GitletException {
          BranchNotFound() {
              super("No such branch exists.");
+         }
+     }
+
+     static class NoNeedToMerge extends GitletException {
+         NoNeedToMerge() {
+             super("Cannot merge a branch with itself.");
          }
      }
 }

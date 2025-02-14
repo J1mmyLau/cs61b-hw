@@ -64,6 +64,19 @@ public class Main {
                 repo.branch(args[1]);
                 break;
             }
+            case "rm-branch": {
+                repo.removeBranch(args[1]);
+                break;
+            }
+            case "reset": {
+                repo.reset(args[1]);
+                break;
+            }
+            case "merge": {
+                repo.merge(args[1]);
+                break;
+            }
+
             default: {
                 throw new GitletException.InvalidCommands();
             }
