@@ -42,7 +42,12 @@ public class Repository {
     public Repository() {
         new File(GITLET_DIR, "removing").mkdir();
         new File(GITLET_DIR, "staging").mkdir();
-        currentBranch = readContentsAsString(join(GITLET_DIR, "branch"));
+        if(join(GITLET_DIR, "branch").exists()){
+            currentBranch = readContentsAsString(join(GITLET_DIR, "branch"));
+        }
+        else{
+            currentBranch = "master";
+        }
         removedFiles = new ArrayList<String>();
         if(plainFilenamesIn(join(GITLET_DIR, "removing")) != null){
             for(String file : plainFilenamesIn(join(GITLET_DIR, "removing"))){
