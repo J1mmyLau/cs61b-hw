@@ -142,7 +142,7 @@ public class Repository {
         }
         File file=join(CWD, fileName);
         file.delete();
-
+        commit("rm " + fileName);
     }
 
     public void log(){
