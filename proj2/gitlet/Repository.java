@@ -10,14 +10,7 @@ import java.util.Set;
 
 import static gitlet.Utils.*;
 
-// TODO: any imports you need here
 
-/** Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
- *
- *  @author TODO
- */
 public class Repository {
 
     /**
@@ -84,12 +77,12 @@ public class Repository {
     }
     /* TODO: fill in the rest of this class. */
     public void add(String fileName) {
-        File file = new File(fileName);
-        stagedFiles.add(fileName);
+        File file = join(CWD, fileName);
         if (!file.exists()) {
             System.out.println("File does not exist.");
             return;
         }
+        stagedFiles.add(fileName);
         Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/master"), String.class)), Commit.class);
         if (currentCommit.getFiles().contains(fileName)) {
             if (currentCommit.getBlob(fileName).equals(sha1(readContentsAsString(file)))) {
@@ -136,20 +129,20 @@ public class Repository {
     }
 
     public void rm(String fileName) {
-        Commit CurrentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/master"), String.class)), Commit.class);
-        if (CurrentCommit.getFiles().contains(fileName)) {
-            removedFiles.add(fileName);
-            writeContents(join(GITLET_DIR, "removing", fileName), "");
-            join(CWD, fileName).delete();
+        Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/master"), String.class)), Commit.class);
+        if (!currentCommit.getFiles().contains(fileName)) {
+            System.out.println("No reason to remove the file.");
             return;
         }
-        File stagingArea = join(GITLET_DIR, "staging", fileName);
-        if (stagingArea.exists()) {
-            stagingArea.delete();
-            return;
+        removedFiles.add(fileName);
+        writeContents(join(GITLET_DIR, "removing", fileName), readContentsAsString(join(CWD, fileName)));
+        if (plainFilenamesIn(join(GITLET_DIR, "staging")).contains(fileName)) {
+            stagedFiles.remove(fileName);
+            join(GITLET_DIR, "staging", fileName).delete();
         }
-        System.out.println("No reason to remove the file.");
-        return;
+        File file=join(CWD, fileName);
+        file.delete();
+
     }
 
     public void log(){
