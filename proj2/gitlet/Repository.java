@@ -82,7 +82,7 @@ public class Repository {
             return;
         }
         stagedFiles.add(fileName);
-        Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/master"), String.class)), Commit.class);
+        Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
         if (currentCommit.getFiles().contains(fileName)) {
             if (currentCommit.getBlob(fileName).equals(sha1(readContentsAsString(file)))) {
                 return;
@@ -125,7 +125,7 @@ public class Repository {
         newCommit.setDepth(parent.getDepth() + 1);
         newCommit.writeBlob();
         writeObject(join(GITLET_DIR, "commits", newCommit.getCommitID()), (Serializable) newCommit);
-        writeObject(join(GITLET_DIR, "refs/heads/master"), newCommit.getCommitID());
+        writeObject(join(GITLET_DIR, "refs/heads/" + currentBranch), newCommit.getCommitID());
         for (String fileName : plainFilenamesIn(stagingArea)) {
             join(GITLET_DIR, "staging", fileName).delete();
         }
@@ -133,7 +133,7 @@ public class Repository {
     }
 
     public void rm(String fileName) {
-        Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/master"), String.class)), Commit.class);
+        Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
         if (!currentCommit.getFiles().contains(fileName)) {
             System.out.println("No reason to remove the file.");
             return;
@@ -190,7 +190,7 @@ public class Repository {
     }
 
     public void log(){
-        String commitID = readObject(join(GITLET_DIR, "refs/heads/master"),String.class);
+        String commitID = readObject(join(GITLET_DIR, "refs/heads/" + currentBranch),String.class);
         Commit commit = readObject(join(GITLET_DIR, "commits", commitID), Commit.class);
         print_log(commit);
     }
@@ -260,7 +260,7 @@ public class Repository {
         System.out.println();
         System.out.println("=== Untracked Files ===");
         for(String workingTreeFile : plainFilenamesIn(CWD)){
-            if(!readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/master"), String.class)), Commit.class).getFiles().contains(workingTreeFile)){
+            if(!readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class).getFiles().contains(workingTreeFile)){
                 if(!removedFiles.contains(workingTreeFile)){
                     if(!stagedFiles.contains(workingTreeFile)) {
                         System.out.println(workingTreeFile);
@@ -272,7 +272,7 @@ public class Repository {
     }
 
     private void senseModification() {
-        Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/master"), String.class)), Commit.class);
+        Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
         Set<String> files = currentCommit.getFiles();
         for (String workingTreeFile : plainFilenamesIn(CWD)) {
             if (!files.contains(workingTreeFile)) {
