@@ -27,6 +27,9 @@ public class Main {
                 break;
             }
             case "commit": {
+                for(int i = 2; i < args.length; i++) {
+                    args[1] += " " + args[i];
+                }
                 repo.commit(args[1], false);
                 break;
             }
