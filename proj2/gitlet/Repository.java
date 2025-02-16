@@ -1,8 +1,10 @@
 package gitlet;
 
 import java.io.File;
-import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static gitlet.Utils.*;
 
@@ -18,13 +20,17 @@ public class Repository {
      * variable is used. We've provided two examples for you.
      */
 
-    /** The current working directory. */
+    /**
+     * The current working directory.
+     */
     public static final File CWD = new File(System.getProperty("user.dir"));
-    /** The .gitlet directory. */
+    /**
+     * The .gitlet directory.
+     */
     public static final File GITLET_DIR = join(CWD, ".gitlet");
-    private List<String> removedFiles;
+    private final List<String> removedFiles;
     private List<String> stagedFiles;
-    private String currentBranch;
+    private final String currentBranch;
 
     public Repository() {
         new File(GITLET_DIR, "removing").mkdir();
@@ -66,7 +72,7 @@ public class Repository {
         ArrayList<String> parents = new ArrayList<>();
         parents.add("");
         Commit initialCommit = new Commit("initial commit", parents, new HashSet<String>(), false, "master");
-        writeObject(join(GITLET_DIR, "commits", initialCommit.getCommitID()), (Serializable) initialCommit);
+        writeObject(join(GITLET_DIR, "commits", initialCommit.getCommitID()), initialCommit);
         writeObject(join(GITLET_DIR, "refs/heads/master"), initialCommit.getCommitID());
         writeContents(join(GITLET_DIR, "branch"), "master");
     }
@@ -78,7 +84,8 @@ public class Repository {
             return;
         }
         stagedFiles.add(fileName);
-        Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
+        Commit currentCommit = readObject(join(GITLET_DIR, "commits",
+                readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
         if (currentCommit.getFiles().contains(fileName)) {
             if (currentCommit.getBlob(fileName).equals(sha1(readContentsAsString(file)))) {
                 return;
@@ -90,7 +97,7 @@ public class Repository {
     }
 
     public void commit(String message, Boolean isMerged) {
-        if(message.equals("")){
+        if (message.equals("")) {
             System.out.println("Please enter a commit message.");
             return;
         }
@@ -103,15 +110,15 @@ public class Repository {
         String parentID = readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class);
         Commit parent = readObject(join(GITLET_DIR, "commits", parentID), Commit.class);
         Set<String> files = new HashSet<String>();
-        for(String file : parent.getFiles()){
+        for (String file : parent.getFiles()) {
             files.add(file);
         }
-        for(String file : plainFilenamesIn(stagingArea)){
+        for (String file : plainFilenamesIn(stagingArea)) {
             files.add(file);
         }
-        for(String file : removedFiles){
+        for (String file : removedFiles) {
             files.remove(file);
-            for(String fileName : plainFilenamesIn(join(GITLET_DIR, "removing"))){
+            for (String fileName : plainFilenamesIn(join(GITLET_DIR, "removing"))) {
                 join(GITLET_DIR, "removing", fileName).delete();
             }
         }
@@ -120,7 +127,7 @@ public class Repository {
         Commit newCommit = new Commit(message, parentsID, files, isMerged, parent.getBranch());
         newCommit.setDepth(parent.getDepth() + 1);
         newCommit.writeBlob();
-        writeObject(join(GITLET_DIR, "commits", newCommit.getCommitID()), (Serializable) newCommit);
+        writeObject(join(GITLET_DIR, "commits", newCommit.getCommitID()), newCommit);
         writeObject(join(GITLET_DIR, "refs/heads/" + currentBranch), newCommit.getCommitID());
         for (String fileName : plainFilenamesIn(stagingArea)) {
             join(GITLET_DIR, "staging", fileName).delete();
@@ -129,7 +136,8 @@ public class Repository {
     }
 
     public void rm(String fileName) {
-        Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
+        Commit currentCommit = readObject(join(GITLET_DIR, "commits",
+                readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
         if (!currentCommit.getFiles().contains(fileName)) {
             System.out.println("No reason to remove the file.");
             return;
@@ -140,38 +148,39 @@ public class Repository {
             stagedFiles.remove(fileName);
             join(GITLET_DIR, "staging", fileName).delete();
         }
-        File file=join(CWD, fileName);
+        File file = join(CWD, fileName);
         file.delete();
     }
 
-    public void debugCommit(String commitID){
+    public void debugCommit(String commitID) {
         Commit commit = readObject(join(GITLET_DIR, "commits", commitID), Commit.class);
         System.out.println("Commit ID: " + commit.getCommitID());
         System.out.println("Message: " + commit.getMessage());
         System.out.println("Date: " + commit.getDate());
         System.out.println("Files: ");
-        for(String file : commit.getFiles()){
+        for (String file : commit.getFiles()) {
             System.out.println(file);
         }
         System.out.println("Parents: ");
-        for(String parent : commit.getParentsID()){
+        for (String parent : commit.getParentsID()) {
             System.out.println(parent);
         }
     }
 
-    private void print_log(Commit commit){
-        if(commit.isMerged()) {
+    private void printLog(Commit commit) {
+        if (commit.isMerged()) {
             String commitID = commit.getCommitID();
             System.out.println("===");
             System.out.println("commit " + commitID);
-            System.out.println("Merge: " + commit.getParentsID().get(0).substring(0, 7) + " " + commit.getParentsID().get(1).substring(0, 7));
+            System.out.println("Merge: " + commit.getParentsID().get(0).substring(0, 7)
+                    + " " + commit.getParentsID().get(1).substring(0, 7));
             Commit parent1 = readObject(join(GITLET_DIR, "commits", commit.getParentsID().get(0)), Commit.class);
             Commit parent2 = readObject(join(GITLET_DIR, "commits", commit.getParentsID().get(1)), Commit.class);
             System.out.println("Date: " + commit.getTimestamp());
             System.out.println("Merged " + parent1.getBranch() + " into " + parent2.getBranch() + ".");
             System.out.println();
-            print_log(parent1);
-            print_log(parent2);
+            printLog(parent1);
+            printLog(parent2);
             return;
         }
         System.out.println("===");
@@ -181,23 +190,24 @@ public class Repository {
         System.out.println();
         if (!commit.getParentsID().get(0).equals("")) {
             Commit parent = readObject(join(GITLET_DIR, "commits", commit.getParentsID().get(0)), Commit.class);
-            print_log(parent);
+            printLog(parent);
         }
     }
 
-    public void log(){
-        String commitID = readObject(join(GITLET_DIR, "refs/heads/" + currentBranch),String.class);
+    public void log() {
+        String commitID = readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class);
         Commit commit = readObject(join(GITLET_DIR, "commits", commitID), Commit.class);
-        print_log(commit);
+        printLog(commit);
     }
 
-    public void globalLog(){
+    public void globalLog() {
         for (String commitID : plainFilenamesIn(join(GITLET_DIR, "commits"))) {
             Commit commit = readObject(join(GITLET_DIR, "commits", commitID), Commit.class);
-            if(commit.isMerged()){
+            if (commit.isMerged()) {
                 System.out.println("===");
                 System.out.println("commit " + commitID);
-                System.out.println("Merge: " + commit.getParentsID().get(0).substring(0,7) + " " + commit.getParentsID().get(1).substring(0,7));
+                System.out.println("Merge: " + commit.getParentsID().get(0).substring(0, 7)
+                        + " " + commit.getParentsID().get(1).substring(0, 7));
                 Commit parent1 = readObject(join(GITLET_DIR, "commits", commit.getParentsID().get(0)), Commit.class);
                 Commit parent2 = readObject(join(GITLET_DIR, "commits", commit.getParentsID().get(1)), Commit.class);
                 System.out.println("Date: " + commit.getTimestamp());
@@ -213,7 +223,7 @@ public class Repository {
         }
     }
 
-    public void find(String message){
+    public void find(String message) {
         boolean found = false;
         for (String commitID : plainFilenamesIn(join(GITLET_DIR, "commits"))) {
             Commit commit = readObject(join(GITLET_DIR, "commits", commitID), Commit.class);
@@ -224,19 +234,18 @@ public class Repository {
         }
         if (!found) {
             System.out.println("Found no commit with that message.");
-            return;
         }
     }
 
-    public void status(){
+    public void status() {
         System.out.println("=== Branches ===");
         for (String branch : plainFilenamesIn(join(GITLET_DIR, "refs/heads"))) {
-            if (branch.equals(readContentsAsString(join(GITLET_DIR, "branch"))) ) {
+            if (branch.equals(readContentsAsString(join(GITLET_DIR, "branch")))) {
                 System.out.println("*" + branch);
             }
         }
-        for(String branch : plainFilenamesIn(join(GITLET_DIR, "refs/heads"))){
-            if(!branch.equals(readContentsAsString(join(GITLET_DIR, "branch")))){
+        for (String branch : plainFilenamesIn(join(GITLET_DIR, "refs/heads"))) {
+            if (!branch.equals(readContentsAsString(join(GITLET_DIR, "branch")))) {
                 System.out.println(branch);
             }
         }
@@ -255,10 +264,12 @@ public class Repository {
         senseModification();
         System.out.println();
         System.out.println("=== Untracked Files ===");
-        for(String workingTreeFile : plainFilenamesIn(CWD)){
-            if(!readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class).getFiles().contains(workingTreeFile)){
-                if(!removedFiles.contains(workingTreeFile)){
-                    if(!stagedFiles.contains(workingTreeFile)) {
+        for (String workingTreeFile : plainFilenamesIn(CWD)) {
+            if (!readObject(join(GITLET_DIR, "commits",
+                    readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class).
+                    getFiles().contains(workingTreeFile)) {
+                if (!removedFiles.contains(workingTreeFile)) {
+                    if (!stagedFiles.contains(workingTreeFile)) {
                         System.out.println(workingTreeFile);
                     }
                 }
@@ -268,7 +279,8 @@ public class Repository {
     }
 
     private void senseModification() {
-        Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
+        Commit currentCommit = readObject(join(GITLET_DIR, "commits",
+                readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
         Set<String> files = currentCommit.getFiles();
         for (String workingTreeFile : plainFilenamesIn(CWD)) {
             if (!files.contains(workingTreeFile)) {
@@ -276,18 +288,15 @@ public class Repository {
                     //System.out.println("There is an untracked file in the way; delete it or add it first.");
                     //System.exit(0);
                     int a = 0;  // do nothing
-                }
-                else {
+                } else {
                     System.out.println(workingTreeFile + "(deleted)");
                 }
-            }
-            else {
+            } else {
                 File file = join(CWD, workingTreeFile);
                 String sha1 = sha1(readContentsAsString(file));
-                if(currentCommit.getBlob(workingTreeFile) == null){
+                if (currentCommit.getBlob(workingTreeFile) == null) {
                     System.out.println(workingTreeFile + "(created)");
-                }
-                else if (!sha1.equals(currentCommit.getBlob(workingTreeFile))) {
+                } else if (!sha1.equals(currentCommit.getBlob(workingTreeFile))) {
                     System.out.println(workingTreeFile + "(modified)");
                 }
             }
@@ -299,25 +308,28 @@ public class Repository {
             System.out.println("No such branch exists.");
             return;
         }
-        if (branch.equals(readContentsAsString(join(GITLET_DIR, "branch"))) ) {
+        if (branch.equals(readContentsAsString(join(GITLET_DIR, "branch")))) {
             System.out.println("No need to checkout the current branch.");
             return;
         }
-        Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + branch), String.class)), Commit.class);
-        for(String fileName : plainFilenamesIn(CWD)){
+        Commit currentCommit = readObject(join(GITLET_DIR, "commits",
+                readObject(join(GITLET_DIR, "refs/heads/" + branch), String.class)), Commit.class);
+        for (String fileName : plainFilenamesIn(CWD)) {
             File file = join(CWD, fileName);
             file.delete();
         }
         for (String fileName : currentCommit.getFiles()) {
             File file = join(CWD, fileName);
-            writeContents(file, readObject(join(GITLET_DIR, "blobs", currentCommit.getBlob(fileName)), String.class));
+            writeContents(file, readObject(join(GITLET_DIR,
+                    "blobs", currentCommit.getBlob(fileName)), String.class));
         }
         writeContents(join(GITLET_DIR, "branch"), branch);
     }
 
     public void checkoutFile(String fileName) {
         String branch = readContentsAsString(join(GITLET_DIR, "branch"));
-        Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + branch), String.class)), Commit.class);
+        Commit currentCommit = readObject(join(GITLET_DIR, "commits",
+                readObject(join(GITLET_DIR, "refs/heads/" + branch), String.class)), Commit.class);
         if (!currentCommit.getFiles().contains(fileName)) {
             System.out.println("File does not exist in that commit.");
             return;
@@ -343,16 +355,16 @@ public class Repository {
         }
         if (!found) {
             System.out.println("No commit with that id exists.");
-            return;
         }
     }
 
     public void branch(String arg) {
-        if(plainFilenamesIn(join(GITLET_DIR, "refs/heads")).contains(arg)){
+        if (plainFilenamesIn(join(GITLET_DIR, "refs/heads")).contains(arg)) {
             System.out.println("A branch with that name already exists.");
             return;
         }
-        writeObject(join(GITLET_DIR, "refs/heads/" + arg), readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class));
+        writeObject(join(GITLET_DIR, "refs/heads/" + arg),
+                readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class));
     }
 
     public void removeBranch(String arg) {
@@ -360,7 +372,7 @@ public class Repository {
             System.out.println("A branch with that name does not exist.");
             return;
         }
-        if (arg.equals(readContentsAsString(join(GITLET_DIR, "branch"))) ) {
+        if (arg.equals(readContentsAsString(join(GITLET_DIR, "branch")))) {
             System.out.println("Cannot remove the current branch.");
         }
         join(GITLET_DIR, "refs/heads", arg).delete();
@@ -372,12 +384,12 @@ public class Repository {
         for (String commit : plainFilenamesIn(join(GITLET_DIR, "commits"))) {
             if (commit.contains(shortenCommitID)) {
                 Commit currentCommit = readObject(join(GITLET_DIR, "commits", commit), Commit.class);
-                for(String fileName : plainFilenamesIn(CWD)){
+                for (String fileName : plainFilenamesIn(CWD)) {
                     File file = join(CWD, fileName);
                     file.delete();
                 }
                 for (String fileName : currentCommit.getFiles()) {
-                    checkoutCommit(currentCommit.getCommitID(),fileName);
+                    checkoutCommit(currentCommit.getCommitID(), fileName);
                 }
                 writeObject(join(GITLET_DIR, "refs/heads/" + currentBranch), commit);
                 found = true;
@@ -385,30 +397,29 @@ public class Repository {
         }
         if (!found) {
             System.out.println("No commit with that id exists.");
-            return;
         }
     }
 
     private void findAncestors(String commitID, Set<String> ancestors) {
-        if(commitID.equals("")){
+        if (commitID.equals("")) {
             return;
         }
         Commit commit = readObject(join(GITLET_DIR, "commits", commitID), Commit.class);
         ancestors.add(commit.getCommitID());
         if (!commit.getParentsID().isEmpty()) {
-            for(String parentID : commit.getParentsID()){
+            for (String parentID : commit.getParentsID()) {
                 findAncestors(parentID, ancestors);
             }
         }
     }
 
-    private String containsAncestors(String commitID,Set<String> ancestors){
+    private String containsAncestors(String commitID, Set<String> ancestors) {
         Commit commit = readObject(join(GITLET_DIR, "commits", commitID), Commit.class);
-        if(ancestors.contains(commit.getCommitID())){
+        if (ancestors.contains(commit.getCommitID())) {
             return commit.getCommitID();
         }
         if (!commit.getParentsID().isEmpty()) {
-            for(String parentID : commit.getParentsID()){
+            for (String parentID : commit.getParentsID()) {
                 return containsAncestors(parentID, ancestors);
             }
         }
@@ -419,8 +430,10 @@ public class Repository {
     private String findSplitPoint(String branch1, String branch2) {
         // find the split point of two branches
         // capable of merged commit with complex multiple branches
-        Commit commit1 = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + branch1), String.class)), Commit.class);
-        Commit commit2 = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + branch2), String.class)), Commit.class);
+        Commit commit1 = readObject(join(GITLET_DIR, "commits",
+                readObject(join(GITLET_DIR, "refs/heads/" + branch1), String.class)), Commit.class);
+        Commit commit2 = readObject(join(GITLET_DIR, "commits",
+                readObject(join(GITLET_DIR, "refs/heads/" + branch2), String.class)), Commit.class);
         Set<String> commit1Set = new HashSet<>();
         findAncestors(commit1.getCommitID(), commit1Set);
         return containsAncestors(commit2.getCommitID(), commit1Set);
@@ -431,12 +444,14 @@ public class Repository {
             System.out.println("A branch with that name does not exist.");
             return;
         }
-        if (givenBranch.equals(readContentsAsString(join(GITLET_DIR, "branch"))) ) {
+        if (givenBranch.equals(readContentsAsString(join(GITLET_DIR, "branch")))) {
             System.out.println("Cannot merge a branch with itself.");
             return;
         }
-        Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
-        Commit givenCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + givenBranch), String.class)), Commit.class);
+        Commit currentCommit = readObject(join(GITLET_DIR, "commits",
+                readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
+        Commit givenCommit = readObject(join(GITLET_DIR, "commits",
+                readObject(join(GITLET_DIR, "refs/heads/" + givenBranch), String.class)), Commit.class);
         String splitPoint = findSplitPoint(currentBranch, givenBranch);
         if (splitPoint.equals(givenCommit.getCommitID())) {
             System.out.println("Given branch is an ancestor of the current branch.");
@@ -460,10 +475,20 @@ public class Repository {
                 add(fileName);
             }
         }
-//        if (!plainFilenamesIn(join(GITLET_DIR, "staging")).isEmpty()) {
-//            System.out.println("Encountered a merge conflict.");
-//            return;
-//        }
+        // check for conflicts
+        for (String fileName : givenCommit.getFiles()) {
+            if (splitCommit.getFiles().contains(fileName) && currentCommit.getFiles().contains(fileName)) {
+                if (!givenCommit.getBlob(fileName).equals(currentCommit.getBlob(fileName))) {
+                    if (splitCommit.getBlob(fileName).equals(currentCommit.getBlob(fileName))) {
+                        checkoutCommit(givenCommit.getCommitID(), fileName);
+                        add(fileName);
+                    } else {
+                        System.out.println("Encountered a merge conflict.");
+                        return;
+                    }
+                }
+            }
+        }
         commit("Merged " + givenBranch + " into " + currentBranch + ".", true);
     }
 }

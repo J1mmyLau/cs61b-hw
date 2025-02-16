@@ -19,20 +19,34 @@ public class Commit implements Serializable {
      * variable is used. We've provided one example for `message`.
      */
 
-    /** The message of this Commit. */
+    /**
+     * The message of this Commit.
+     */
     static final File CWD = new File(System.getProperty("user.dir"));
     static final File GITLET_DIR = join(CWD, ".gitlet");
-    private String commitID;
-    private ArrayList<String> parentsID;
+    private final String commitID;
+    private final ArrayList<String> parentsID;
     private ArrayList<String> SonID;
-    private Date date;
-    private String message;
-    private Set<String> files;
-    private boolean isMerged;
-    private String branch;
-    private List<String> blobs;
-    private Map<String, String> fileToBlob;
+    private final Date date;
+    private final String message;
+    private final Set<String> files;
+    private final boolean isMerged;
+    private final String branch;
+    private final List<String> blobs;
+    private final Map<String, String> fileToBlob;
     private int depth;
+
+    public Commit(String message, ArrayList<String> parentID, Set<String> files, boolean isMerged, String branch) {
+        this.files = files;
+        this.message = message;
+        this.parentsID = parentID;
+        this.date = new Date();
+        this.commitID = Utils.sha1(flattenFile(), parentID.get(0), message, getTimestamp());
+        this.isMerged = isMerged;
+        this.branch = branch;
+        this.blobs = new ArrayList<String>();
+        this.fileToBlob = new HashMap<String, String>();
+    }
 
     public void addParent(String parentID) {
         parentsID.add(parentID);
@@ -42,12 +56,12 @@ public class Commit implements Serializable {
         SonID.add(sonID);
     }
 
-    public void setDepth(int depth) {
-        this.depth = depth;
-    }
-
     public int getDepth() {
         return depth;
+    }
+
+    public void setDepth(int depth) {
+        this.depth = depth;
     }
 
     public void writeBlob() {
@@ -68,18 +82,6 @@ public class Commit implements Serializable {
             return null;
         }
         return fileToBlob.get(fileName);
-    }
-
-    public Commit(String message, ArrayList<String> parentID, Set<String> files, boolean isMerged, String branch) {
-        this.files = files;
-        this.message = message;
-        this.parentsID = parentID;
-        this.date = new Date();
-        this.commitID = Utils.sha1(flattenFile(), parentID.get(0), message, getTimestamp());
-        this.isMerged = isMerged;
-        this.branch = branch;
-        this.blobs = new ArrayList<String>();
-        this.fileToBlob = new HashMap<String, String>();
     }
 
     public String getBranch() {
