@@ -64,6 +64,7 @@ public class Commit implements Serializable {
 
     public String getBlob(String fileName) {
         if (!fileToBlob.containsKey(fileName)) {
+            System.out.println("File does not exist in that commit.");
             return null;
         }
         return fileToBlob.get(fileName);

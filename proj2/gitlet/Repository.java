@@ -176,7 +176,7 @@ public class Repository {
         }
         System.out.println("===");
         System.out.println("commit " + commit.getCommitID());
-        System.out.println("Date: " + commit.getDate());
+        System.out.println("Date: " + commit.getTimestamp());
         System.out.println(commit.getMessage());
         System.out.println();
         if (!commit.getParentsID().get(0).equals("")) {
