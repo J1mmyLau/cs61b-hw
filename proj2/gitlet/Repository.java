@@ -464,10 +464,10 @@ public class Repository {
                 add(fileName);
             }
         }
-        if (!plainFilenamesIn(join(GITLET_DIR, "staging")).isEmpty()) {
-            System.out.println("Encountered a merge conflict.");
-            return;
-        }
+//        if (!plainFilenamesIn(join(GITLET_DIR, "staging")).isEmpty()) {
+//            System.out.println("Encountered a merge conflict.");
+//            return;
+//        }
         commit("Merged " + givenBranch + " into " + currentBranch + ".", true);
     }
 }
