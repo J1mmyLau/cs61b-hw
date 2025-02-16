@@ -129,6 +129,7 @@ public class Repository {
         for (String fileName : plainFilenamesIn(stagingArea)) {
             join(GITLET_DIR, "staging", fileName).delete();
         }
+        writeObject(join(GITLET_DIR, "refs/heads/" + currentBranch), newCommit.getCommitID());
     }
 
     public void rm(String fileName) {
