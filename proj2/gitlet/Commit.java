@@ -1,7 +1,5 @@
 package gitlet;
 
-// TODO: any imports you need here
-
 import java.io.File;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
@@ -9,15 +7,8 @@ import java.util.*;
 
 import static gitlet.Utils.*;
 
-/** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
- *
- *  @author TODO
- */
 public class Commit implements Serializable {
     /**
-     * TODO: add instance variables here.
      * commitID: the unique identifier of the commit
      * parentID: the unique identifier of the parent commit
      * message: the message of the commit
@@ -59,21 +50,20 @@ public class Commit implements Serializable {
         return depth;
     }
 
-    /* TODO: fill in the rest of this class. */
     public void writeBlob() {
         for (String fileName : this.getFiles()) {
             String sha1 = sha1(readContentsAsString(join(CWD, fileName)));
             File file = join(CWD, fileName);
             blobs.add(sha1);
             fileToBlob.put(fileName, sha1);
-            if(!join(GITLET_DIR, "blobs", sha1).exists()){
+            if (!join(GITLET_DIR, "blobs", sha1).exists()) {
                 writeObject(join(GITLET_DIR, "blobs", sha1), readContentsAsString(file));
             }
         }
     }
 
     public String getBlob(String fileName) {
-        if(!fileToBlob.containsKey(fileName)) {
+        if (!fileToBlob.containsKey(fileName)) {
             return null;
         }
         return fileToBlob.get(fileName);

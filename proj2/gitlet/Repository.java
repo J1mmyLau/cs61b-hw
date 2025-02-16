@@ -2,7 +2,6 @@ package gitlet;
 
 import java.io.File;
 import java.io.Serializable;
-import java.sql.Array;
 import java.util.*;
 
 import static gitlet.Utils.*;
@@ -11,11 +10,9 @@ import static gitlet.Utils.*;
 public class Repository {
 
     /**
-     * TODO: add instance variables here.
-     *
+     * removedFiles: the files that are removed from the working directory
      * CWD: the current working directory
      * GITLET_DIR: the .gitlet directory
-     *
      * List all instance variables of the Repository class here with a useful
      * comment above them describing what that variable represents and how that
      * variable is used. We've provided two examples for you.
@@ -32,29 +29,28 @@ public class Repository {
     public Repository() {
         new File(GITLET_DIR, "removing").mkdir();
         new File(GITLET_DIR, "staging").mkdir();
-        if(join(GITLET_DIR, "branch").exists()){
+        if (join(GITLET_DIR, "branch").exists()) {
             currentBranch = readContentsAsString(join(GITLET_DIR, "branch"));
-        }
-        else{
+        } else {
             currentBranch = "master";
         }
         removedFiles = new ArrayList<String>();
-        if(plainFilenamesIn(join(GITLET_DIR, "removing")) != null){
-            for(String file : plainFilenamesIn(join(GITLET_DIR, "removing"))){
+        if (plainFilenamesIn(join(GITLET_DIR, "removing")) != null) {
+            for (String file : plainFilenamesIn(join(GITLET_DIR, "removing"))) {
                 removedFiles.add(file);
             }
         }
-        if(plainFilenamesIn(join(GITLET_DIR, "staging")) == null){
+        if (plainFilenamesIn(join(GITLET_DIR, "staging")) == null) {
             return;
         }
         stagedFiles = new ArrayList<String>();
-        for(String file : plainFilenamesIn(join(GITLET_DIR, "staging"))){
+        for (String file : plainFilenamesIn(join(GITLET_DIR, "staging"))) {
             stagedFiles.add(file);
         }
     }
 
-    public void init(){
-        if(GITLET_DIR.exists()){
+    public void init() {
+        if (GITLET_DIR.exists()) {
             System.out.println("A Gitlet version-control system already exists in the current directory.");
             return;
         }
@@ -72,9 +68,9 @@ public class Repository {
         Commit initialCommit = new Commit("initial commit", parents, new HashSet<String>(), false, "master");
         writeObject(join(GITLET_DIR, "commits", initialCommit.getCommitID()), (Serializable) initialCommit);
         writeObject(join(GITLET_DIR, "refs/heads/master"), initialCommit.getCommitID());
-        writeContents(join(GITLET_DIR,"branch"), "master");
+        writeContents(join(GITLET_DIR, "branch"), "master");
     }
-    /* TODO: fill in the rest of this class. */
+
     public void add(String fileName) {
         File file = join(CWD, fileName);
         if (!file.exists()) {

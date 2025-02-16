@@ -1,28 +1,22 @@
 package gitlet;
 
-/** Driver class for Gitlet, a subset of the Git version-control system.
- *  @author TODO
- */
 public class Main {
 
     /** Usage: java gitlet.Main ARGS, where ARGS contains
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
     public static void main(String[] args) {
-        // TODO: what if args is empty?
-        if(args.length == 0) {
+        if (args.length == 0) {
             throw new GitletException.NoArgsException();
         }
         Repository repo = new Repository();
         String firstArg = args[0];
-        switch(firstArg) {
+        switch (firstArg) {
             case "init": {
-                // TODO: handle the `init` command
                 repo.init();
                 break;
             }
             case "add": {
-                // TODO: handle the `add [filename]` command
                 repo.add(args[1]);
                 break;
             }
@@ -55,11 +49,11 @@ public class Main {
                 break;
             }
             case "checkout": {
-                if(args.length == 2) {
+                if (args.length == 2) {
                     repo.checkoutBranch(args[1]);
-                } else if(args.length == 3) {
+                } else if (args.length == 3) {
                     repo.checkoutFile(args[2]);
-                } else if(args.length == 4) {
+                } else if (args.length == 4) {
                     repo.checkoutCommit(args[1], args[3]);
                 }
                 break;
@@ -80,11 +74,9 @@ public class Main {
                 repo.merge(args[1]);
                 break;
             }
-
             default: {
                 System.out.println("No command with that name exists.");
             }
-            // TODO: FILL THE REST IN
         }
     }
 
