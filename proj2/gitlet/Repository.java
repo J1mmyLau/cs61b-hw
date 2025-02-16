@@ -282,8 +282,6 @@ public class Repository {
         }
     }
 
-    public void checkout() {}
-
     public void checkoutBranch(String branch) {
         if (!plainFilenamesIn(join(GITLET_DIR, "refs/heads")).contains(branch)) {
             System.out.println("No such branch exists.");
@@ -299,7 +297,8 @@ public class Repository {
             file.delete();
         }
         for (String fileName : currentCommit.getFiles()) {
-            checkoutFile(fileName);
+            File file = join(CWD, fileName);
+            writeContents(file, readObject(join(GITLET_DIR, "blobs", currentCommit.getBlob(fileName)), String.class));
         }
         writeContents(join(GITLET_DIR, "branch"), branch);
     }
@@ -356,17 +355,17 @@ public class Repository {
     }
 
     public void reset(String commitID) {
-        commitID = commitID.substring(0, 4);
+        String shortenCommitID = commitID.substring(0, 4);
         boolean found = false;
         for (String commit : plainFilenamesIn(join(GITLET_DIR, "commits"))) {
-            if (commit.contains(commitID)) {
+            if (commit.contains(shortenCommitID)) {
                 Commit currentCommit = readObject(join(GITLET_DIR, "commits", commit), Commit.class);
                 for(String fileName : plainFilenamesIn(CWD)){
                     File file = join(CWD, fileName);
                     file.delete();
                 }
                 for (String fileName : currentCommit.getFiles()) {
-                    checkoutFile(fileName);
+                    checkoutCommit(currentCommit.getCommitID(),fileName);
                 }
                 writeObject(join(GITLET_DIR, "refs/heads/" + currentBranch), commit);
                 found = true;
