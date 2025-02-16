@@ -219,12 +219,11 @@ public class Repository {
     public void status(){
         System.out.println("=== Branches ===");
         for (String branch : plainFilenamesIn(join(GITLET_DIR, "refs/heads"))) {
-            Commit curentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + branch), String.class)), Commit.class);
-            System.out.println("*"+curentCommit.getBranch());
-            for(String branchName : plainFilenamesIn(join(GITLET_DIR, "refs/heads"))){
-                if(!branchName.equals(curentCommit.getBranch())){
-                    System.out.println(branchName);
-                }
+            if (branch.equals(readContentsAsString(join(GITLET_DIR, "branch"))) ) {
+                System.out.println("*" + branch);
+            }
+            else {
+                System.out.println(branch);
             }
         }
         System.out.println();
