@@ -393,6 +393,9 @@ public class Repository {
     }
 
     private void findAncestors(String commitID, Set<String> ancestors) {
+        if(commitID.equals("")){
+            return;
+        }
         Commit commit = readObject(join(GITLET_DIR, "commits", commitID), Commit.class);
         ancestors.add(commit.getCommitID());
         if (!commit.getParentsID().isEmpty()) {
