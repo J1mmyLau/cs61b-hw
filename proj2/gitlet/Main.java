@@ -80,7 +80,7 @@ public class Main {
                 break;
             }
             case "merge": {
-                //repo.merge(args[1]);
+                repo.merge(args[1]);
                 break;
             }
 
