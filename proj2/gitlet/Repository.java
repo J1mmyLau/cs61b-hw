@@ -222,7 +222,9 @@ public class Repository {
             if (branch.equals(readContentsAsString(join(GITLET_DIR, "branch"))) ) {
                 System.out.println("*" + branch);
             }
-            else {
+        }
+        for(String branch : plainFilenamesIn(join(GITLET_DIR, "refs/heads"))){
+            if(!branch.equals(readContentsAsString(join(GITLET_DIR, "branch")))){
                 System.out.println(branch);
             }
         }
