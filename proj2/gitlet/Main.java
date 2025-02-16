@@ -53,6 +53,10 @@ public class Main {
                 repo.status();
                 break;
             }
+            case "debug": {
+                repo.debugCommit(args[1]);
+                break;
+            }
             case "checkout": {
                 if(args.length == 2) {
                     repo.checkoutBranch(args[1]);

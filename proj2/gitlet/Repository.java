@@ -147,6 +147,21 @@ public class Repository {
         file.delete();
     }
 
+    public void debugCommit(String commitID){
+        Commit commit = readObject(join(GITLET_DIR, "commits", commitID), Commit.class);
+        System.out.println("Commit ID: " + commit.getCommitID());
+        System.out.println("Message: " + commit.getMessage());
+        System.out.println("Date: " + commit.getDate());
+        System.out.println("Files: ");
+        for(String file : commit.getFiles()){
+            System.out.println(file);
+        }
+        System.out.println("Parents: ");
+        for(String parent : commit.getParentsID()){
+            System.out.println(parent);
+        }
+    }
+
     private void print_log(Commit commit){
         if(commit.isMerged()) {
             String commitID = commit.getCommitID();
