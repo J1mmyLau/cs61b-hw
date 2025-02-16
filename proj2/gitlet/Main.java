@@ -27,7 +27,7 @@ public class Main {
                 break;
             }
             case "commit": {
-                repo.commit(args[1]);
+                repo.commit(args[1], false);
                 break;
             }
             case "rm": {
@@ -73,7 +73,7 @@ public class Main {
                 break;
             }
             case "merge": {
-                repo.merge(args[1]);
+                //repo.merge(args[1]);
                 break;
             }
 

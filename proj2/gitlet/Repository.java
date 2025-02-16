@@ -1,12 +1,12 @@
 package gitlet;
 
+
+import org.junit.Test;
+
 import java.io.File;
 import java.io.Serializable;
 import java.sql.Array;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
@@ -70,7 +70,9 @@ public class Repository {
         new File(GITLET_DIR, "refs").mkdir();
         new File(GITLET_DIR, "refs/heads").mkdir();
         new File(GITLET_DIR, "refs/tags").mkdir();
-        Commit initialCommit = new Commit("initial commit", "", new HashSet<String>(), false, "master");
+        ArrayList<String> parents = new ArrayList<>();
+        parents.add("");
+        Commit initialCommit = new Commit("initial commit", parents, new HashSet<String>(), false, "master");
         writeObject(join(GITLET_DIR, "commits", initialCommit.getCommitID()), (Serializable) initialCommit);
         writeObject(join(GITLET_DIR, "refs/heads/master"), initialCommit.getCommitID());
         writeContents(join(GITLET_DIR,"branch"), "master");
@@ -94,13 +96,14 @@ public class Repository {
 
     }
 
-    public void commit(String message) {
+    public void commit(String message, Boolean isMerged) {
         if(message.equals("")){
             System.out.println("Please enter a commit message.");
             return;
         }
         File stagingArea = join(GITLET_DIR, "staging");
-        if (plainFilenamesIn(stagingArea).isEmpty()) {
+        File removingArea = join(GITLET_DIR, "removing");
+        if (plainFilenamesIn(stagingArea).isEmpty() && plainFilenamesIn(removingArea).isEmpty()) {
             System.out.println("No changes added to the commit.");
             return;
         }
@@ -119,7 +122,10 @@ public class Repository {
                 join(GITLET_DIR, "removing", fileName).delete();
             }
         }
-        Commit newCommit = new Commit(message, parentID, files, false, parent.getBranch());
+        ArrayList<String> parentsID = new ArrayList<>();
+        parentsID.add(parentID);
+        Commit newCommit = new Commit(message, parentsID, files, isMerged, parent.getBranch());
+        newCommit.setDepth(parent.getDepth() + 1);
         newCommit.writeBlob();
         writeObject(join(GITLET_DIR, "commits", newCommit.getCommitID()), (Serializable) newCommit);
         writeObject(join(GITLET_DIR, "refs/heads/master"), newCommit.getCommitID());
@@ -142,33 +148,38 @@ public class Repository {
         }
         File file=join(CWD, fileName);
         file.delete();
-        commit("rm " + fileName);
+    }
+
+    private void print_log(Commit commit){
+        if(commit.isMerged()) {
+            String commitID = commit.getCommitID();
+            System.out.println("===");
+            System.out.println("commit " + commitID);
+            System.out.println("Merge: " + commit.getParentsID().get(0).substring(0, 7) + " " + commit.getParentsID().get(1).substring(0, 7));
+            Commit parent1 = readObject(join(GITLET_DIR, "commits", commit.getParentsID().get(0)), Commit.class);
+            Commit parent2 = readObject(join(GITLET_DIR, "commits", commit.getParentsID().get(1)), Commit.class);
+            System.out.println("Date: " + commit.getTimestamp());
+            System.out.println("Merged " + parent1.getBranch() + " into " + parent2.getBranch() + ".");
+            System.out.println();
+            print_log(parent1);
+            print_log(parent2);
+            return;
+        }
+        System.out.println("===");
+        System.out.println("commit " + commit.getCommitID());
+        System.out.println("Date: " + commit.getDate());
+        System.out.println(commit.getMessage());
+        System.out.println();
+        if (!commit.getParentsID().get(0).equals("")) {
+            Commit parent = readObject(join(GITLET_DIR, "commits", commit.getParentsID().get(0)), Commit.class);
+            print_log(parent);
+        }
     }
 
     public void log(){
         String commitID = readObject(join(GITLET_DIR, "refs/heads/master"),String.class);
-        while (!commitID.equals("")) {
-
-            Commit commit = readObject(join(GITLET_DIR, "commits", commitID), Commit.class);
-            if(commit.isMerged()){
-                System.out.println("===");
-                System.out.println("commit " + commitID);
-                System.out.println("Merge: " + commit.getParentsID()[0].substring(0,7) + " " + commit.getParentsID()[1].substring(0,7));
-                Commit parent1 = readObject(join(GITLET_DIR, "commits", commit.getParentsID()[0]), Commit.class);
-                Commit parent2 = readObject(join(GITLET_DIR, "commits", commit.getParentsID()[1]), Commit.class);
-                System.out.println("Date: " + commit.getTimestamp());
-                System.out.println("Merged " + parent1.getBranch() + " into " + parent2.getBranch() + ".");
-                System.out.println();
-                commitID = commit.getParentID();
-                continue;
-            }
-            System.out.println("===");
-            System.out.println("commit " + commitID);
-            System.out.println("Date: " + commit.getTimestamp());
-            System.out.println(commit.getMessage());
-            System.out.println();
-            commitID = commit.getParentID();
-        }
+        Commit commit = readObject(join(GITLET_DIR, "commits", commitID), Commit.class);
+        print_log(commit);
     }
 
     public void globalLog(){
@@ -177,13 +188,12 @@ public class Repository {
             if(commit.isMerged()){
                 System.out.println("===");
                 System.out.println("commit " + commitID);
-                System.out.println("Merge: " + commit.getParentsID()[0].substring(0,7) + " " + commit.getParentsID()[1].substring(0,7));
-                Commit parent1 = readObject(join(GITLET_DIR, "commits", commit.getParentsID()[0]), Commit.class);
-                Commit parent2 = readObject(join(GITLET_DIR, "commits", commit.getParentsID()[1]), Commit.class);
+                System.out.println("Merge: " + commit.getParentsID().get(0).substring(0,7) + " " + commit.getParentsID().get(1).substring(0,7));
+                Commit parent1 = readObject(join(GITLET_DIR, "commits", commit.getParentsID().get(0)), Commit.class);
+                Commit parent2 = readObject(join(GITLET_DIR, "commits", commit.getParentsID().get(1)), Commit.class);
                 System.out.println("Date: " + commit.getTimestamp());
                 System.out.println("Merged " + parent1.getBranch() + " into " + parent2.getBranch() + ".");
                 System.out.println();
-                commitID = commit.getParentID();
                 continue;
             }
             System.out.println("===");
@@ -369,90 +379,79 @@ public class Repository {
             return;
         }
     }
-    private Commit findSplitPoint(Commit currentCommit, Commit givenCommit) {
-        Commit splitPoint = null;
-        while (currentCommit != null) {
-            Commit temp = givenCommit;
-            while (temp != null) {
-                if (currentCommit.getCommitID().equals(temp.getCommitID())) {
-                    splitPoint = currentCommit;
-                    return splitPoint;
-                }
-                temp = readObject(join(GITLET_DIR, "commits", temp.getParentID()), Commit.class);
+
+    private void findAncestors(String commitID, Set<String> ancestors) {
+        Commit commit = readObject(join(GITLET_DIR, "commits", commitID), Commit.class);
+        ancestors.add(commit.getCommitID());
+        if (!commit.getParentsID().isEmpty()) {
+            for(String parentID : commit.getParentsID()){
+                findAncestors(parentID, ancestors);
             }
-            currentCommit = readObject(join(GITLET_DIR, "commits", currentCommit.getParentID()), Commit.class);
         }
-        return splitPoint;
     }
 
-    private void mergeConflict(){
+    private String containsAncestors(String commitID,Set<String> ancestors){
+        Commit commit = readObject(join(GITLET_DIR, "commits", commitID), Commit.class);
+        if(ancestors.contains(commit.getCommitID())){
+            return commit.getCommitID();
+        }
+        if (!commit.getParentsID().isEmpty()) {
+            for(String parentID : commit.getParentsID()){
+                return containsAncestors(parentID, ancestors);
+            }
+        }
+        return null;
 
     }
-    //TODO: deal with the multi branch case later
-    public void merge(String branch) {
-        if (!plainFilenamesIn(join(GITLET_DIR, "refs/heads")).contains(branch)) {
+
+    private String findSplitPoint(String branch1, String branch2) {
+        // find the split point of two branches
+        // capable of merged commit with complex multiple branches
+        Commit commit1 = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + branch1), String.class)), Commit.class);
+        Commit commit2 = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + branch2), String.class)), Commit.class);
+        Set<String> commit1Set = new HashSet<>();
+        findAncestors(commit1.getCommitID(), commit1Set);
+        return containsAncestors(commit2.getCommitID(), commit1Set);
+    }
+
+    public void merge(String givenBranch) {
+        if (!plainFilenamesIn(join(GITLET_DIR, "refs/heads")).contains(givenBranch)) {
             System.out.println("A branch with that name does not exist.");
             return;
         }
-        if (branch.equals(readContentsAsString(join(GITLET_DIR, "branch"))) ) {
+        if (givenBranch.equals(readContentsAsString(join(GITLET_DIR, "branch"))) ) {
             System.out.println("Cannot merge a branch with itself.");
             return;
         }
         Commit currentCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
-        Commit givenCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + branch), String.class)), Commit.class);
-        Commit splitPoint = findSplitPoint(currentCommit, givenCommit);
-        if (splitPoint.getCommitID().equals(givenCommit.getCommitID())) {
+        Commit givenCommit = readObject(join(GITLET_DIR, "commits", readObject(join(GITLET_DIR, "refs/heads/" + givenBranch), String.class)), Commit.class);
+        String splitPoint = findSplitPoint(currentBranch, givenBranch);
+        if (splitPoint.equals(givenCommit.getCommitID())) {
             System.out.println("Given branch is an ancestor of the current branch.");
             return;
         }
-        if (splitPoint.getCommitID().equals(currentCommit.getCommitID())) {
+        if (splitPoint.equals(currentCommit.getCommitID())) {
             writeObject(join(GITLET_DIR, "refs/heads/" + currentBranch), givenCommit.getCommitID());
             System.out.println("Current branch fast-forwarded.");
             return;
         }
-        for (String fileName : givenCommit.getFiles()) {
-            if (!currentCommit.getFiles().contains(fileName)) {
-                if (plainFilenamesIn(CWD).contains(fileName)) {
-                    System.out.println("There is an untracked file in the way; delete it or add it first.");
-                    return;
-                }
-            }
-        }
-
-        for (String fileName : givenCommit.getFiles()) {
-            if (!currentCommit.getFiles().contains(fileName)) {
+        Commit splitCommit = readObject(join(GITLET_DIR, "commits", splitPoint), Commit.class);
+        for (String fileName : splitCommit.getFiles()) {
+            if (!currentCommit.getFiles().contains(fileName) && givenCommit.getFiles().contains(fileName)) {
                 checkoutCommit(givenCommit.getCommitID(), fileName);
                 add(fileName);
             }
-            else {
-                if (currentCommit.getBlob(fileName).equals(givenCommit.getBlob(fileName))) {
-                    if (plainFilenamesIn(join(GITLET_DIR, "staging")).contains(fileName)) {
-                        stagedFiles.remove(fileName);
-                        join(GITLET_DIR, "staging", fileName).delete();
-                    }
-                }
-                else {
-                    if (plainFilenamesIn(CWD).contains(fileName)) {
-                        mergeConflict();
-                        return;
-                    }
-                    checkoutCommit(givenCommit.getCommitID(), fileName);
-                    add(fileName);
-                }
+        }
+        for (String fileName : givenCommit.getFiles()) {
+            if (!splitCommit.getFiles().contains(fileName) && !currentCommit.getFiles().contains(fileName)) {
+                checkoutCommit(givenCommit.getCommitID(), fileName);
+                add(fileName);
             }
         }
-        for (String fileName : currentCommit.getFiles()) {
-            if (!givenCommit.getFiles().contains(fileName)) {
-                if (plainFilenamesIn(CWD).contains(fileName)) {
-                    System.out.println("There is an untracked file in the way; delete it or add it first.");
-                    return;
-                }
-            }
+        if (!plainFilenamesIn(join(GITLET_DIR, "staging")).isEmpty()) {
+            System.out.println("Encountered a merge conflict.");
+            return;
         }
-        String message = "Merged " + currentBranch + " with " + branch + ".";
-        Commit newCommit = new Commit(message, currentCommit.getCommitID(), new HashSet<String>(), true, currentBranch);
-        newCommit.writeBlob();
-        writeObject(join(GITLET_DIR, "commits", newCommit.getCommitID()), newCommit);
-        writeObject(join(GITLET_DIR, "refs/heads/" + currentBranch), newCommit.getCommitID());
+        commit("Merged " + givenBranch + " into " + currentBranch + ".", true);
     }
 }
