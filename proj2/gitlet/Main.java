@@ -67,6 +67,9 @@ public class Main {
                     }
                     repo.checkoutFile(args[2]);
                 } else if (args.length == 4) {
+                    if(!args[2].equals("--")) {
+                        System.out.println("Incorrect operands.");
+                    }
                     repo.checkoutCommit(args[1], args[3]);
                 }
                 break;
