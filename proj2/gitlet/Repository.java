@@ -331,7 +331,7 @@ public class Repository {
         List<String> workingTreeFiles = plainFilenamesIn(CWD);
         for (String file : workingTreeFiles) {
             if(!nowCommit.getFiles().contains(file) && currentCommit.getFiles().contains(file)) {
-                System.out.println("There is an untracked file in the way; delete it or add it first.");
+                System.out.println("TThere is an untracked file in the way; delete it, or add and commit it first.");
                 return;
             }
         }
