@@ -393,6 +393,9 @@ public class Repository {
                 }
                 writeObject(join(GITLET_DIR, "refs/heads/" + currentBranch), commit);
                 found = true;
+                for (String fileName : plainFilenamesIn(join(GITLET_DIR, "staging"))) {
+                    join(GITLET_DIR, "staging", fileName).delete();
+                }
             }
         }
         if (!found) {
