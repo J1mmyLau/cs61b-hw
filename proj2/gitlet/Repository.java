@@ -86,6 +86,10 @@ public class Repository {
         stagedFiles.add(fileName);
         Commit currentCommit = readObject(join(GITLET_DIR, "commits",
                 readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
+        if(removedFiles.contains(fileName)) {
+            removedFiles.remove(fileName);
+            join(GITLET_DIR, "removing", fileName).delete();
+        }
         if (currentCommit.getFiles().contains(fileName)) {
             if (currentCommit.getBlob(fileName).equals(sha1(readContentsAsString(file)))) {
                 return;
@@ -93,7 +97,6 @@ public class Repository {
         }
         File stagingArea = join(GITLET_DIR, "staging", fileName);
         writeContents(stagingArea, readContentsAsString(file));
-
     }
 
     public void commit(String message, Boolean isMerged) {
@@ -138,18 +141,21 @@ public class Repository {
     public void rm(String fileName) {
         Commit currentCommit = readObject(join(GITLET_DIR, "commits",
                 readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
-        if (!currentCommit.getFiles().contains(fileName)) {
+        if (!currentCommit.getFiles().contains(fileName) && !stagedFiles.contains(fileName)) {
             System.out.println("No reason to remove the file.");
             return;
         }
-        removedFiles.add(fileName);
-        writeContents(join(GITLET_DIR, "removing", fileName), readContentsAsString(join(CWD, fileName)));
+        if(currentCommit.getFiles().contains(fileName)) {
+            stagedFiles.add(fileName);
+            writeContents(join(GITLET_DIR, "staging", fileName), readContents(join(CWD,fileName)));
+            removedFiles.add(fileName);
+            writeContents(join(GITLET_DIR, "removing", fileName), "");
+            join(CWD, fileName).delete();
+        }
         if (plainFilenamesIn(join(GITLET_DIR, "staging")).contains(fileName)) {
             stagedFiles.remove(fileName);
             join(GITLET_DIR, "staging", fileName).delete();
         }
-        File file = join(CWD, fileName);
-        file.delete();
     }
 
     public void debugCommit(String commitID) {
