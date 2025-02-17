@@ -439,6 +439,43 @@ public class Repository {
         return containsAncestors(commit2.getCommitID(), commit1Set);
     }
 
+    public void commitMerge(String branch1, String branch2) {
+        Commit commit1 = readObject(join(GITLET_DIR, "commits",
+                readObject(join(GITLET_DIR, "refs/heads/" + branch1), String.class)), Commit.class);
+        Commit commit2 = readObject(join(GITLET_DIR, "commits",
+                readObject(join(GITLET_DIR, "refs/heads/" + branch2), String.class)), Commit.class);
+        File stagingArea = join(GITLET_DIR, "staging");
+        File removingArea = join(GITLET_DIR, "removing");
+        Set<String> files = new HashSet<String>();
+        for (String file : commit1.getFiles()) {
+            files.add(file);
+        }
+        for (String file : commit2.getFiles()) {
+            files.add(file);
+        }
+        for (String file : plainFilenamesIn(stagingArea)) {
+            files.add(file);
+        }
+        for (String file : removedFiles) {
+            files.remove(file);
+            for (String fileName : plainFilenamesIn(join(GITLET_DIR, "removing"))) {
+                join(GITLET_DIR, "removing", fileName).delete();
+            }
+        }
+        ArrayList<String> parentsID = new ArrayList<>();
+        parentsID.add(commit1.getCommitID());
+        parentsID.add(commit2.getCommitID());
+        Commit newCommit = new Commit("Merged " + branch1 + " into " + branch2 + ".", parentsID, files, true, branch2);
+        newCommit.setDepth(commit1.getDepth() + 1);
+        newCommit.writeBlob();
+        writeObject(join(GITLET_DIR, "commits", newCommit.getCommitID()), newCommit);
+        writeObject(join(GITLET_DIR, "refs/heads/" + branch2), newCommit.getCommitID());
+        for (String fileName : plainFilenamesIn(stagingArea)) {
+            join(GITLET_DIR, "staging", fileName).delete();
+        }
+        writeObject(join(GITLET_DIR, "refs/heads/" + branch2), newCommit.getCommitID());
+    }
+
     public void merge(String givenBranch) {
         if (!plainFilenamesIn(join(GITLET_DIR, "refs/heads")).contains(givenBranch)) {
             System.out.println("A branch with that name does not exist.");
@@ -506,6 +543,6 @@ public class Repository {
                 }
             }
         }
-        commit("Merged " + givenBranch + " into " + currentBranch + ".", true);
+        commitMerge(givenBranch, currentBranch);
     }
 }
