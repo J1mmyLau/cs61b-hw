@@ -463,29 +463,46 @@ public class Repository {
             return;
         }
         Commit splitCommit = readObject(join(GITLET_DIR, "commits", splitPoint), Commit.class);
-        for (String fileName : splitCommit.getFiles()) {
-            if (!currentCommit.getFiles().contains(fileName) && givenCommit.getFiles().contains(fileName)) {
-                checkoutCommit(givenCommit.getCommitID(), fileName);
-                add(fileName);
-            }
-        }
-        for (String fileName : givenCommit.getFiles()) {
-            if (!splitCommit.getFiles().contains(fileName) && !currentCommit.getFiles().contains(fileName)) {
-                checkoutCommit(givenCommit.getCommitID(), fileName);
-                add(fileName);
-            }
-        }
-        // check for conflicts
-        for (String fileName : givenCommit.getFiles()) {
-            if (splitCommit.getFiles().contains(fileName) && currentCommit.getFiles().contains(fileName)) {
-                if (!givenCommit.getBlob(fileName).equals(currentCommit.getBlob(fileName))) {
-                    if (splitCommit.getBlob(fileName).equals(currentCommit.getBlob(fileName))) {
+        Set<String>  splitFiles = splitCommit.getFiles();
+        Set<String> currentFiles = currentCommit.getFiles();
+        Set<String> givenFiles = givenCommit.getFiles();
+        for (String fileName : splitFiles) {
+            if (currentFiles.contains(fileName) && givenFiles.contains(fileName)) {
+                if (!currentCommit.getBlob(fileName).equals(givenCommit.getBlob(fileName))) {
+                    if (currentCommit.getBlob(fileName).equals(splitCommit.getBlob(fileName))) {
                         checkoutCommit(givenCommit.getCommitID(), fileName);
                         add(fileName);
+                    } else if (givenCommit.getBlob(fileName).equals(splitCommit.getBlob(fileName))) {
+                        continue;
                     } else {
                         System.out.println("Encountered a merge conflict.");
-                        return;
                     }
+                }
+            } else if (currentFiles.contains(fileName) && !givenFiles.contains(fileName)) {
+                if (!currentCommit.getBlob(fileName).equals(splitCommit.getBlob(fileName))) {
+                    continue;
+                }
+            } else if (!currentFiles.contains(fileName) && givenFiles.contains(fileName)) {
+                checkoutCommit(givenCommit.getCommitID(), fileName);
+                add(fileName);
+            }
+        }
+        for (String fileName : givenFiles) {
+            if (!splitFiles.contains(fileName) && !currentFiles.contains(fileName)) {
+                checkoutCommit(givenCommit.getCommitID(), fileName);
+                add(fileName);
+            } else if (!splitFiles.contains(fileName) && currentFiles.contains(fileName)) {
+                if (!currentCommit.getBlob(fileName).equals(givenCommit.getBlob(fileName))) {
+                    System.out.println("Encountered a merge conflict.");
+                }
+            }
+        }
+        for(String fileName : currentFiles) {
+            if (!splitFiles.contains(fileName) && !givenFiles.contains(fileName)) {
+                continue;
+            } else if (!splitFiles.contains(fileName) && givenFiles.contains(fileName)) {
+                if (!currentCommit.getBlob(fileName).equals(givenCommit.getBlob(fileName))) {
+                    System.out.println("Encountered a merge conflict.");
                 }
             }
         }
