@@ -323,8 +323,18 @@ public class Repository {
             System.out.println("No need to checkout the current branch.");
             return;
         }
+        Commit nowCommit = readObject(join(GITLET_DIR, "commits",
+                readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
         Commit currentCommit = readObject(join(GITLET_DIR, "commits",
                 readObject(join(GITLET_DIR, "refs/heads/" + branch), String.class)), Commit.class);
+
+        List<String> workingTreeFiles = plainFilenamesIn(CWD);
+        for (String file : workingTreeFiles) {
+            if(!nowCommit.getFiles().contains(file) && currentCommit.getFiles().contains(file)) {
+                System.out.println("There is an untracked file in the way; delete it or add it first.");
+                return;
+            }
+        }
         for (String fileName : plainFilenamesIn(CWD)) {
             File file = join(CWD, fileName);
             file.delete();
