@@ -1,11 +1,15 @@
 package gitlet;
 
+import java.io.File;
+
 public class Main {
 
     /**
      * Usage: java gitlet.Main ARGS, where ARGS contains
      * <COMMAND> <OPERAND1> <OPERAND2> ...
      */
+    static final File CWD = new File(System.getProperty("user.dir"));
+    static final File GITLET_DIR = Utils.join(CWD, ".gitlet");
     public static void main(String[] args) {
         if (args.length == 0) {
             System.out.println("Please enter a command.");
@@ -13,12 +17,17 @@ public class Main {
         }
         Repository repo = new Repository();
         String firstArg = args[0];
+        if(!firstArg.equals("init") && !GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
         switch (firstArg) {
             case "init": {
                 repo.init();
                 break;
             }
             case "add": {
+                if(!GITLET_DIR.exists())
                 repo.add(args[1]);
                 break;
             }

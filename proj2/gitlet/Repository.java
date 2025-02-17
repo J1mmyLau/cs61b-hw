@@ -145,7 +145,12 @@ public class Repository {
             System.out.println("No reason to remove the file.");
             return;
         }
-        if(currentCommit.getFiles().contains(fileName)) {
+        if (!join(CWD, fileName).exists() && currentCommit.getFiles().contains(fileName)) {
+            writeContents(join(GITLET_DIR, "removing", fileName), "");
+            removedFiles.add(fileName);
+            return;
+        }
+        if (currentCommit.getFiles().contains(fileName)) {
             stagedFiles.add(fileName);
             writeContents(join(GITLET_DIR, "staging", fileName), readContents(join(CWD,fileName)));
             removedFiles.add(fileName);
