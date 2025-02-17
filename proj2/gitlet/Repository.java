@@ -447,7 +447,7 @@ public class Repository {
         File stagingArea = join(GITLET_DIR, "staging");
         File removingArea = join(GITLET_DIR, "removing");
         Set<String> files = new HashSet<String>();
-        for(String file : plainFilenamesIn(CWD)) {
+        for (String file : plainFilenamesIn(CWD)) {
             files.add(file);
         }
         ArrayList<String> parentsID = new ArrayList<>();
@@ -491,7 +491,7 @@ public class Repository {
         Set<String>  splitFiles = splitCommit.getFiles();
         Set<String> currentFiles = currentCommit.getFiles();
         Set<String> givenFiles = givenCommit.getFiles();
-        for(String file : currentFiles) {
+        for (String file : currentFiles) {
             if (givenFiles.contains(file)) {
                 if (!currentCommit.getBlob(file).equals(givenCommit.getBlob(file))) {
                     System.out.println("Encountered a merge conflict.");
@@ -499,20 +499,20 @@ public class Repository {
                 return;
             }
         }
-        for(String file : givenFiles) {
+        for (String file : givenFiles) {
             if (currentFiles.contains(file)) {
-                    if (!splitCommit.getBlob(file).equals(givenCommit.getBlob(file))) {
-                        System.out.println("Encountered a merge conflict.");
-                    }
-                    return;
+                if (!splitCommit.getBlob(file).equals(givenCommit.getBlob(file))) {
+                    System.out.println("Encountered a merge conflict.");
+                }
+                return;
             } else {
                 checkoutCommit(givenCommit.getCommitID(), file);
                 add(file);
             }
         }
-        for(String file : splitFiles) {
+        for (String file : splitFiles) {
             if (!currentFiles.contains(file) || !givenFiles.contains(file)) {
-                if(join(CWD, file).exists()) {
+                if (join(CWD, file).exists()) {
                     join(CWD, file).delete();
                 }
             }
