@@ -8,7 +8,8 @@ public class Main {
      */
     public static void main(String[] args) {
         if (args.length == 0) {
-            throw new GitletException.NoArgsException();
+            System.out.println("Please enter a command.");
+            return;
         }
         Repository repo = new Repository();
         String firstArg = args[0];
