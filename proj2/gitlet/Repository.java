@@ -447,20 +447,8 @@ public class Repository {
         File stagingArea = join(GITLET_DIR, "staging");
         File removingArea = join(GITLET_DIR, "removing");
         Set<String> files = new HashSet<String>();
-        for (String file : commit1.getFiles()) {
+        for(String file : plainFilenamesIn(CWD)) {
             files.add(file);
-        }
-        for (String file : commit2.getFiles()) {
-            files.add(file);
-        }
-        for (String file : plainFilenamesIn(stagingArea)) {
-            files.add(file);
-        }
-        for (String file : removedFiles) {
-            files.remove(file);
-            for (String fileName : plainFilenamesIn(join(GITLET_DIR, "removing"))) {
-                join(GITLET_DIR, "removing", fileName).delete();
-            }
         }
         ArrayList<String> parentsID = new ArrayList<>();
         parentsID.add(commit2.getCommitID());
@@ -503,43 +491,29 @@ public class Repository {
         Set<String>  splitFiles = splitCommit.getFiles();
         Set<String> currentFiles = currentCommit.getFiles();
         Set<String> givenFiles = givenCommit.getFiles();
-        for (String fileName : splitFiles) {
-            if (currentFiles.contains(fileName) && givenFiles.contains(fileName)) {
-                if (!currentCommit.getBlob(fileName).equals(givenCommit.getBlob(fileName))) {
-                    if (currentCommit.getBlob(fileName).equals(splitCommit.getBlob(fileName))) {
-                        checkoutCommit(givenCommit.getCommitID(), fileName);
-                        add(fileName);
-                    } else if (givenCommit.getBlob(fileName).equals(splitCommit.getBlob(fileName))) {
-                        continue;
-                    } else {
+        for(String file : currentFiles) {
+            if (givenFiles.contains(file)) {
+                if (!currentCommit.getBlob(file).equals(givenCommit.getBlob(file))) {
+                    System.out.println("Encountered a merge conflict.");
+                }
+                return;
+            }
+        }
+        for(String file : givenFiles) {
+            if (currentFiles.contains(file)) {
+                    if (!splitCommit.getBlob(file).equals(givenCommit.getBlob(file))) {
                         System.out.println("Encountered a merge conflict.");
                     }
-                }
-            } else if (currentFiles.contains(fileName) && !givenFiles.contains(fileName)) {
-                if (!currentCommit.getBlob(fileName).equals(splitCommit.getBlob(fileName))) {
-                    continue;
-                }
-            } else if (!currentFiles.contains(fileName) && givenFiles.contains(fileName)) {
-                checkoutCommit(givenCommit.getCommitID(), fileName);
-                add(fileName);
+                    return;
+            } else {
+                checkoutCommit(givenCommit.getCommitID(), file);
+                add(file);
             }
         }
-        for (String fileName : givenFiles) {
-            if (!splitFiles.contains(fileName) && !currentFiles.contains(fileName)) {
-                checkoutCommit(givenCommit.getCommitID(), fileName);
-                add(fileName);
-            } else if (!splitFiles.contains(fileName) && currentFiles.contains(fileName)) {
-                if (!currentCommit.getBlob(fileName).equals(givenCommit.getBlob(fileName))) {
-                    System.out.println("Encountered a merge conflict.");
-                }
-            }
-        }
-        for(String fileName : currentFiles) {
-            if (!splitFiles.contains(fileName) && !givenFiles.contains(fileName)) {
-                continue;
-            } else if (!splitFiles.contains(fileName) && givenFiles.contains(fileName)) {
-                if (!currentCommit.getBlob(fileName).equals(givenCommit.getBlob(fileName))) {
-                    System.out.println("Encountered a merge conflict.");
+        for(String file : splitFiles) {
+            if (!currentFiles.contains(file) || !givenFiles.contains(file)) {
+                if(join(CWD, file).exists()) {
+                    join(CWD, file).delete();
                 }
             }
         }
