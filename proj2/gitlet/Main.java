@@ -27,7 +27,6 @@ public class Main {
                 break;
             }
             case "add": {
-                if(!GITLET_DIR.exists())
                 repo.add(args[1]);
                 break;
             }
