@@ -177,7 +177,7 @@ public class Repository {
             Commit parent1 = readObject(join(GITLET_DIR, "commits", commit.getParentsID().get(0)), Commit.class);
             Commit parent2 = readObject(join(GITLET_DIR, "commits", commit.getParentsID().get(1)), Commit.class);
             System.out.println("Date: " + commit.getTimestamp());
-            System.out.println("Merged " + parent1.getBranch() + " into " + parent2.getBranch() + ".");
+            System.out.println(commit.getMessage());
             System.out.println();
             printLog(parent1);
             printLog(parent2);
@@ -463,8 +463,8 @@ public class Repository {
             }
         }
         ArrayList<String> parentsID = new ArrayList<>();
-        parentsID.add(commit1.getCommitID());
         parentsID.add(commit2.getCommitID());
+        parentsID.add(commit1.getCommitID());
         Commit newCommit = new Commit("Merged " + branch1 + " into " + branch2 + ".", parentsID, files, true, branch2);
         newCommit.setDepth(commit1.getDepth() + 1);
         newCommit.writeBlob();
