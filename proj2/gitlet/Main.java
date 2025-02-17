@@ -54,6 +54,9 @@ public class Main {
                 if (args.length == 2) {
                     repo.checkoutBranch(args[1]);
                 } else if (args.length == 3) {
+                    if(!args[1].equals("--")) {
+                        System.out.println("Incorrect operands.");
+                    }
                     repo.checkoutFile(args[2]);
                 } else if (args.length == 4) {
                     repo.checkoutCommit(args[1], args[3]);
