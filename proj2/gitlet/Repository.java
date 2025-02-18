@@ -404,6 +404,14 @@ public class Repository {
         boolean found = false;
         for (String commit : plainFilenamesIn(join(GITLET_DIR, "commits"))) {
             if (commit.contains(shortenCommitID)) {
+                for(String fileName : plainFilenamesIn(CWD)) {
+                    if(!stagedFiles.contains(fileName)) {
+                        if (!(readObject(join(GITLET_DIR, "commits",commit ), Commit.class)).getFiles().contains(fileName)) {
+                            System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                            return;
+                        }
+                    }
+                }
                 Commit currentCommit = readObject(join(GITLET_DIR, "commits", commit), Commit.class);
                 for (String fileName : plainFilenamesIn(CWD)) {
                     File file = join(CWD, fileName);
@@ -516,34 +524,39 @@ public class Repository {
         Set<String> currentFiles = currentCommit.getFiles();
         Set<String> givenFiles = givenCommit.getFiles();
         Boolean conflict = false;
-        Set<String> conflictFiles = new HashSet<>();
-        for (String file : currentFiles) {
-            if (givenFiles.contains(file)) {
-                if (!currentCommit.getBlob(file).equals(givenCommit.getBlob(file))) {
-                    conflict = true;
-                }
-            }
-        }
-        for (String file : givenFiles) {
-            if (currentFiles.contains(file)) {
-                if (!splitCommit.getBlob(file).equals(givenCommit.getBlob(file))) {
-                    conflict = true;
-                }
-            } else {
+
+        Set<String> allFiles = new HashSet<>(splitFiles);
+        allFiles.addAll(currentFiles);
+        allFiles.addAll(givenFiles);
+
+        for (String file : allFiles) {
+            String splitBlob = splitFiles.contains(file) ? splitCommit.getBlob(file) : null;
+            String currentBlob = currentFiles.contains(file) ? currentCommit.getBlob(file) : null;
+            String givenBlob = givenFiles.contains(file) ? givenCommit.getBlob(file) : null;
+
+            if (splitBlob != null && currentBlob != null && splitBlob.equals(currentBlob) && givenBlob == null) {
+                join(CWD, file).delete();
+            } else if ((splitBlob != null && currentBlob != null && splitBlob.equals(currentBlob) && !splitBlob.equals(givenBlob)) ||
+                (splitBlob == null && currentBlob == null && givenBlob != null)) {
                 checkoutCommit(givenCommit.getCommitID(), file);
-                add(file);
-            }
-        }
-        for (String file : splitFiles) {
-            if (!currentFiles.contains(file) || !givenFiles.contains(file)) {
-                if (join(CWD, file).exists()) {
-                    join(CWD, file).delete();
+                stagedFiles.add(file);
+                writeContents(join(GITLET_DIR, "staging", file), readContentsAsString(join(CWD, file)));
+            } else if ((splitBlob != null && currentBlob != null && givenBlob != null && !splitBlob.equals(currentBlob) && !splitBlob.equals(givenBlob))
+                    || (splitBlob != null && currentBlob == null && givenBlob == null && !splitBlob.equals(givenBlob))) {
+                conflict = true;
+                System.out.println("Encountered a merge conflict.");
+                if(join(GITLET_DIR, "blobs" + splitBlob).exists()) {
+                    writeContents(join(CWD, file), "<<<<<<< HEAD\n" + readContentsAsString(join(CWD, file)) +
+                            "=======\n" + readObject(join(GITLET_DIR, "blobs", splitBlob), String.class) + ">>>>>>>");
+                } else {
+                    writeContents(join(CWD, file), "<<<<<<< HEAD\n" + readContentsAsString(join(CWD, file)) +
+                            "=======\n" + ">>>>>>>");
                 }
+                stagedFiles.add(file);
+                writeContents(join(GITLET_DIR, "staging", file), readContentsAsString(join(CWD, file)));
             }
         }
-        if (conflict) {
-            System.out.println("Encountered a merge conflict.");
-        }
+
         commitMerge(givenBranch, currentBranch);
     }
 }
