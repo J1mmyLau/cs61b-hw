@@ -83,7 +83,6 @@ public class Repository {
             System.out.println("File does not exist.");
             return;
         }
-        stagedFiles.add(fileName);
         Commit currentCommit = readObject(join(GITLET_DIR, "commits",
                 readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class);
         if(removedFiles.contains(fileName)) {
@@ -95,6 +94,7 @@ public class Repository {
                 return;
             }
         }
+        stagedFiles.add(fileName);
         File stagingArea = join(GITLET_DIR, "staging", fileName);
         writeContents(stagingArea, readContentsAsString(file));
     }
@@ -515,20 +515,20 @@ public class Repository {
         Set<String>  splitFiles = splitCommit.getFiles();
         Set<String> currentFiles = currentCommit.getFiles();
         Set<String> givenFiles = givenCommit.getFiles();
+        Boolean conflict = false;
+        Set<String> conflictFiles = new HashSet<>();
         for (String file : currentFiles) {
             if (givenFiles.contains(file)) {
                 if (!currentCommit.getBlob(file).equals(givenCommit.getBlob(file))) {
-                    System.out.println("Encountered a merge conflict.");
+                    conflict = true;
                 }
-                return;
             }
         }
         for (String file : givenFiles) {
             if (currentFiles.contains(file)) {
                 if (!splitCommit.getBlob(file).equals(givenCommit.getBlob(file))) {
-                    System.out.println("Encountered a merge conflict.");
+                    conflict = true;
                 }
-                return;
             } else {
                 checkoutCommit(givenCommit.getCommitID(), file);
                 add(file);
@@ -540,6 +540,9 @@ public class Repository {
                     join(CWD, file).delete();
                 }
             }
+        }
+        if (conflict) {
+            System.out.println("Encountered a merge conflict.");
         }
         commitMerge(givenBranch, currentBranch);
     }
