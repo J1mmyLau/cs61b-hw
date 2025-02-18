@@ -548,7 +548,7 @@ public class Repository {
                     || (splitBlob != null && currentBlob == null && givenBlob == null && !splitBlob.equals(givenBlob))) {
                 conflict = true;
                 System.out.println("Encountered a merge conflict.");
-                if(join(GITLET_DIR, "blobs" + splitBlob).exists()) {
+                if(join(GITLET_DIR, "blobs", splitBlob).exists()) {
                     writeContents(join(CWD, file), "<<<<<<< HEAD\n" + readContentsAsString(join(CWD, file)) +
                             "=======\n" + readObject(join(GITLET_DIR, "blobs", splitBlob), String.class) + ">>>>>>>");
                 } else {
