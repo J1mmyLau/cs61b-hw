@@ -135,7 +135,6 @@ public class Repository {
         for (String fileName : plainFilenamesIn(stagingArea)) {
             join(GITLET_DIR, "staging", fileName).delete();
         }
-        writeObject(join(GITLET_DIR, "refs/heads/" + currentBranch), newCommit.getCommitID());
     }
 
     public void rm(String fileName) {
@@ -406,10 +405,11 @@ public class Repository {
             if (commit.contains(shortenCommitID)) {
                 for(String fileName : plainFilenamesIn(CWD)) {
                     if(!stagedFiles.contains(fileName)) {
-                        if (!(readObject(join(GITLET_DIR, "commits",commit ), Commit.class)).getFiles().contains(fileName) &&
-                        !(readObject(join(GITLET_DIR, "commits",
+                        String currentFileBlob = sha1(readContentsAsString(join(CWD, fileName)));
+                        if (!(readObject(join(GITLET_DIR, "commits",commit ), Commit.class)).containsBlob(currentFileBlob) &&
+                        !((readObject(join(GITLET_DIR, "commits",
                                 readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class)).
-                                getFiles().contains(fileName)) {
+                                containsBlob(currentFileBlob))) {
                             System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                             return;
                         }
@@ -548,9 +548,9 @@ public class Repository {
                     || (splitBlob != null && currentBlob == null && givenBlob == null && !splitBlob.equals(givenBlob))) {
                 conflict = true;
                 System.out.println("Encountered a merge conflict.");
-                if(join(GITLET_DIR, "blobs", splitBlob).exists()) {
+                if(join(GITLET_DIR, "blobs", givenBlob).exists()) {
                     writeContents(join(CWD, file), "<<<<<<< HEAD\n" + readContentsAsString(join(CWD, file)) +
-                            "=======\n" + readObject(join(GITLET_DIR, "blobs", splitBlob), String.class) + ">>>>>>>");
+                            "=======\n" + readObject(join(GITLET_DIR, "blobs", givenBlob), String.class) + ">>>>>>>");
                 } else {
                     writeContents(join(CWD, file), "<<<<<<< HEAD\n" + readContentsAsString(join(CWD, file)) +
                             "=======\n" + ">>>>>>>");
