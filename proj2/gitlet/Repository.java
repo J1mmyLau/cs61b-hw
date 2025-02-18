@@ -406,7 +406,10 @@ public class Repository {
             if (commit.contains(shortenCommitID)) {
                 for(String fileName : plainFilenamesIn(CWD)) {
                     if(!stagedFiles.contains(fileName)) {
-                        if (!(readObject(join(GITLET_DIR, "commits",commit ), Commit.class)).getFiles().contains(fileName)) {
+                        if (!(readObject(join(GITLET_DIR, "commits",commit ), Commit.class)).getFiles().contains(fileName) &&
+                        !(readObject(join(GITLET_DIR, "commits",
+                                readObject(join(GITLET_DIR, "refs/heads/" + currentBranch), String.class)), Commit.class)).
+                                getFiles().contains(fileName)) {
                             System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                             return;
                         }
